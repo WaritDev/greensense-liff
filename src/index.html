@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      .message {
+        padding: 10px;
+        background: #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="lineprofile" style="display: none">
+      <img width="100px" id="profileImage" src="" />
+      <div>
+        Hello <b><span id="profileName">Name</span></b>
+      </div>
+      <div>UID <span id="profileUID">UID</span></div>
+
+      <div>
+        <input id="lineMessage" type="text">
+        <button onclick="sendMessage()"> send message </button>
+      </div>
+    </div>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js" integrity="sha512-DdX/YwF5e41Ok+AI81HI8f5/5UsoxCVT9GKYZRIzpLxb8Twz4ZwPPX+jQMwMhNQ9b5+zDEefc+dcvQoPWGNZ3g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+      let userId = "";
+
+      const logOut = () => {
+        liff.logout();
+        window.location.reload();
+      };
+      const main = async () => {
+        await liff.init({ liffId: "2006590878-7Q9VJB6o" });
+        if (liff.isLoggedIn()) {
+          const profile = await liff.getProfile();
+
+          profileImage.src = profile.pictureUrl;
+          profileName.innerText = profile.displayName;
+          profileUID.innerText = profile.userId;
+
+          userId = profile.userId;
+
+          lineprofile.style.display = "block";
+        } else {
+          liff.login();
+        }
+      };
+
+      const sendMessage = async () => {
+        try {
+            if (!lineMessage.value) {
+                throw new Error('message not found')
+            }
+            const reponse = await axios.post(
+                'https://cb3f-184-22-231-98.ngrok-free.app/send-message',
+                {
+                    userId,
+                    message: lineMessage.value
+                }
+            )
+
+            console.log('response', response.data)
+            console.log(userId, lineMessage.value)
+        } catch (error) {
+            console.log('error', error)
+        }
+
+        
+      }
+      main();
+    </script>
+  </body>
+</html>
