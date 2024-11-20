@@ -32,6 +32,8 @@ const sendMessage = async (userId, message) => {
   return response;
 };
 
+
+
 app.post("/send-message", async (req, res) => {
   const { userId, message } = req.body;
 
@@ -49,6 +51,33 @@ app.post("/send-message", async (req, res) => {
   }
 });
 
+app.post('/webhook', async (req, res) => {
+    const {events} = req.body
+
+    if (!events || events.length === 0) {
+        res.json({
+            message: 'OK'
+        })
+        return false
+    }
+
+  try {
+    const lineEvent = events[0]
+    const userId = lineEvent.source.userId
+    const response = await sendMessage(userId, 'Hello From Webhook');
+    console.log("=== LINE log", response.data);
+    res.json({
+      message: "Message OK",
+    });
+  } catch (error) {
+    console.log("error", error.response.data);
+    res.status(400).json({
+      error: error.response,
+    });
+  }
+
+    console.log('events', events)
+})
 app.listen(port, async () => {
   console.log(`Express app listening at http://localhost:${port}`);
 });
