@@ -3,29 +3,68 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>ระบบจัดการฟาร์ม</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-      .message {
-        padding: 10px;
-        background: #ddd;
+      * {
+        font-family: 'Prompt', sans-serif;
       }
     </style>
   </head>
-  <body>
-    <div id="lineprofile" style="display: none">
-      <img width="100px" id="profileImage" src="" />
-      <div>
-        Hello <b><span id="profileName">Name</span></b>
+  <body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+      <!-- Profile Section -->
+      <div id="lineprofile" style="display: none" class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="flex items-center space-x-4 mb-4">
+          <img width="100px" id="profileImage" src="" class="rounded-full border-4 border-green-400"/>
+          <div>
+            <div class="text-xl font-semibold">สวัสดี คุณ <span id="profileName" class="text-green-600">Name</span></div>
+            <div class="text-gray-600">รหัสผู้ใช้: <span id="profileUID" class="font-mono">UID</span></div>
+          </div>
+        </div>
+        
+        <div class="flex space-x-2">
+          <input id="lineMessage" type="text" class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="พิมพ์ข้อความ...">
+          <button onclick="sendMessage()" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors">
+            ส่งข้อความ
+          </button>
+        </div>
       </div>
-      <div>UID <span id="profileUID">UID</span></div>
 
-      <div>
-        <input id="lineMessage" type="text">
-        <button onclick="sendMessage()"> send message </button>
+      <!-- Farm Data Section -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Farm Summary -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-semibold mb-4">ข้อมูลฟาร์มโดยรวม</h2>
+          <div id="farmSummary" class="space-y-3">
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+              <span>จำนวนโรงเรือนทั้งหมด</span>
+              <span id="totalHouses" class="font-semibold text-green-600">0</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+              <span>จำนวนสัตว์ทั้งหมด</span>
+              <span id="totalAnimals" class="font-semibold text-green-600">0</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+              <span>รายได้รวม (บาท)</span>
+              <span id="totalIncome" class="font-semibold text-green-600">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Latest Activities -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-semibold mb-4">กิจกรรมล่าสุด</h2>
+          <div id="activities" class="space-y-3">
+            <!-- Activities will be populated here -->
+          </div>
+        </div>
       </div>
     </div>
+
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js" integrity="sha512-DdX/YwF5e41Ok+AI81HI8f5/5UsoxCVT9GKYZRIzpLxb8Twz4ZwPPX+jQMwMhNQ9b5+zDEefc+dcvQoPWGNZ3g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
     <script>
       let userId = "";
 
@@ -33,6 +72,46 @@
         liff.logout();
         window.location.reload();
       };
+
+      const loadFarmData = async () => {
+        try {
+          // Simulate loading data from Google Sheet
+          // In real implementation, replace with actual API call
+          const mockData = {
+            totalHouses: 5,
+            totalAnimals: 1500,
+            totalIncome: 250000,
+            activities: [
+              { date: '2024-11-21', description: 'เพิ่มไก่ใหม่ 100 ตัว', type: 'add' },
+              { date: '2024-11-20', description: 'ขายไข่ได้ 1,000 ฟอง', type: 'sale' },
+              { date: '2024-11-19', description: 'ทำวัคซีนโรงเรือน A', type: 'health' }
+            ]
+          };
+
+          // Update UI
+          document.getElementById('totalHouses').textContent = mockData.totalHouses;
+          document.getElementById('totalAnimals').textContent = mockData.totalAnimals.toLocaleString();
+          document.getElementById('totalIncome').textContent = mockData.totalIncome.toLocaleString();
+
+          const activitiesContainer = document.getElementById('activities');
+          activitiesContainer.innerHTML = mockData.activities.map(activity => `
+            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded">
+              <div class="w-2 h-2 rounded-full ${
+                activity.type === 'add' ? 'bg-blue-500' :
+                activity.type === 'sale' ? 'bg-green-500' : 'bg-yellow-500'
+              }"></div>
+              <div class="flex-1">
+                <div class="text-sm text-gray-600">${activity.date}</div>
+                <div>${activity.description}</div>
+              </div>
+            </div>
+          `).join('');
+
+        } catch (error) {
+          console.error('Error loading farm data:', error);
+        }
+      };
+
       const main = async () => {
         await liff.init({ liffId: "2006590878-7Q9VJB6o" });
         if (liff.isLoggedIn()) {
@@ -43,8 +122,10 @@
           profileUID.innerText = profile.userId;
 
           userId = profile.userId;
-
           lineprofile.style.display = "block";
+
+          // Load farm data after successful login
+          await loadFarmData();
         } else {
           liff.login();
         }
@@ -52,25 +133,23 @@
 
       const sendMessage = async () => {
         try {
-            if (!lineMessage.value) {
-                throw new Error('message not found')
+          if (!lineMessage.value) {
+            throw new Error('message not found')
+          }
+          const response = await axios.post(
+            'https://2a3d-184-22-231-98.ngrok-free.app/send-message',
+            {
+              userId,
+              message: lineMessage.value
             }
-            const reponse = await axios.post(
-                'https://2a3d-184-22-231-98.ngrok-free.app/send-message',
-                {
-                    userId,
-                    message: lineMessage.value
-                }
-            )
-
-            console.log('response', response.data)
-            console.log(userId, lineMessage.value)
+          )
+          console.log('response', response.data)
+          lineMessage.value = ''; // Clear input after sending
         } catch (error) {
-            console.log('error', error)
+          console.log('error', error)
         }
+      };
 
-        
-      }
       main();
     </script>
   </body>
