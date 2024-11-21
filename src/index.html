@@ -61,12 +61,23 @@
           </div>
         </div>
       </div>
+
+      <!-- Farm Sensor Data Cards -->
+      <div class="mt-8">
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+          <h2 class="text-lg sm:text-xl font-semibold mb-4">ข้อมูลเซนเซอร์ฟาร์ม</h2>
+          <div id="farmTableBody" class="space-y-4">
+            <!-- Farm cards will be populated here -->
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
     <script>
       let userId = "";
+      const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7WnU9CdWErLxOxWEd1JNQ-Lk6p4dKDRPiRvUDYwkYczbyu_1qJpj2jxftioyEhgLDg4vBimw2rK4d/pub?output=csv";
 
       const logOut = () => {
         liff.logout();
@@ -109,6 +120,127 @@
         }
       };
 
+      const loadFarmDataFromCSV = async () => {
+        try {
+          const response = await fetch(SHEET_URL);
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          const csvText = await response.text();
+          
+          const rows = csvText.split('\n').map(row => 
+            row.split(',').map(cell => cell.trim())
+          );
+          
+          const validRows = rows.filter(row => row.length > 1 && row[0]);
+          const headers = validRows[0];
+          const data = validRows.slice(1);
+          
+          const uidIndex = headers.findIndex(header => 
+            header.toLowerCase().includes('line') || header.toLowerCase().includes('uid')
+          );
+          
+          if (uidIndex === -1) {
+            throw new Error('LINE UID column not found in CSV');
+          }
+
+          const userFarms = data.filter(row => row[uidIndex] === userId);
+          const container = document.getElementById('farmTableBody');
+
+          if (userFarms.length === 0) {
+            container.innerHTML = `
+              <div class="text-center p-4 text-gray-500">
+                ไม่พบข้อมูลฟาร์มสำหรับผู้ใช้นี้
+              </div>
+            `;
+            return;
+          }
+
+          container.innerHTML = userFarms.map(row => `
+            <div class="bg-gray-50 rounded-lg p-4 shadow-sm border border-gray-200">
+              <!-- Farm ID และ พิกัด -->
+              <div class="mb-4">
+                <div class="flex justify-between items-center mb-3">
+                  <div>
+                    <div class="text-sm font-medium text-gray-600">Farm ID</div>
+                    <div class="text-lg font-semibold text-gray-900">${row[0]}</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-sm font-medium text-gray-600">พิกัด</div>
+                    <div class="text-sm text-gray-900">${row[2]}, ${row[3]}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ข้อมูลเซนเซอร์ -->
+              <div class="grid grid-cols-2 gap-4">
+                <!-- อุณหภูมิ -->
+                <div class="bg-white p-3 rounded-lg">
+                  <div class="text-sm font-medium text-gray-600 mb-1">อุณหภูมิ</div>
+                  <div class="flex items-baseline">
+                    <span class="text-lg font-semibold text-gray-900">${row[4]}</span>
+                    <span class="ml-1 text-sm text-gray-500">°C</span>
+                  </div>
+                </div>
+
+                <!-- ความชื้น -->
+                <div class="bg-white p-3 rounded-lg">
+                  <div class="text-sm font-medium text-gray-600 mb-1">ความชื้น</div>
+                  <div class="flex items-baseline">
+                    <span class="text-lg font-semibold text-gray-900">${row[5]}</span>
+                    <span class="ml-1 text-sm text-gray-500">%</span>
+                  </div>
+                </div>
+
+                <!-- ความเข้มแสง -->
+                <div class="bg-white p-3 rounded-lg">
+                  <div class="text-sm font-medium text-gray-600 mb-1">ความเข้มแสง</div>
+                  <div class="flex items-baseline">
+                    <span class="text-lg font-semibold text-gray-900">${row[6]}</span>
+                    <span class="ml-1 text-sm text-gray-500">lux</span>
+                  </div>
+                </div>
+
+                <!-- ความชื้นในดิน -->
+                <div class="bg-white p-3 rounded-lg">
+                  <div class="text-sm font-medium text-gray-600 mb-1">ความชื้นในดิน</div>
+                  <div class="flex items-baseline">
+                    <span class="text-lg font-semibold text-gray-900">${row[7]}</span>
+                    <span class="ml-1 text-sm text-gray-500">%</span>
+                  </div>
+                </div>
+
+                <!-- ปริมาณน้ำฝน -->
+                <div class="bg-white p-3 rounded-lg">
+                  <div class="text-sm font-medium text-gray-600 mb-1">ปริมาณน้ำฝน</div>
+                  <div class="flex items-baseline">
+                    <span class="text-lg font-semibold text-gray-900">${row[8]}</span>
+                    <span class="ml-1 text-sm text-gray-500">mm</span>
+                  </div>
+                </div>
+
+                <!-- ความเร็วลม -->
+                <div class="bg-white p-3 rounded-lg">
+                  <div class="text-sm font-medium text-gray-600 mb-1">ความเร็วลม</div>
+                  <div class="flex items-baseline">
+                    <span class="text-lg font-semibold text-gray-900">${row[9]}</span>
+                    <span class="ml-1 text-sm text-gray-500">m/s</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `).join('');
+
+        } catch (error) {
+          console.error('Error loading farm data from CSV:', error);
+          document.getElementById('farmTableBody').innerHTML = `
+            <div class="text-center p-4 text-red-500">
+              เกิดข้อผิดพลาดในการโหลดข้อมูล: ${error.message}
+            </div>
+          `;
+        }
+      };
+
       const main = async () => {
         await liff.init({ liffId: "2006590878-7Q9VJB6o" });
         if (liff.isLoggedIn()) {
@@ -122,6 +254,10 @@
           lineprofile.style.display = "block";
 
           await loadFarmData();
+          await loadFarmDataFromCSV();
+
+          // Set up auto-refresh every 5 minutes
+          setInterval(loadFarmDataFromCSV, 5 * 60 * 1000);
         } else {
           liff.login();
         }
