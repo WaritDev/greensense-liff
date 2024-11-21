@@ -1,0 +1,19 @@
+* {
+    font-family: 'Prompt', sans-serif;
+  }
+  
+  .sensor-card {
+    @apply bg-white p-3 rounded-lg;
+  }
+  
+  .sensor-label {
+    @apply text-sm font-medium text-gray-600 mb-1;
+  }
+  
+  .sensor-value {
+    @apply text-lg font-semibold text-gray-900;
+  }
+  
+  .sensor-unit {
+    @apply ml-1 text-sm text-gray-500;
+  }
