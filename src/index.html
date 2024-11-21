@@ -4,8 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ระบบจัดการฟาร์ม</title>
-    <!-- ใช้ Tailwind CSS ที่ build แล้ว -->
-    <link href="/dist/output.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
       * {
@@ -18,7 +17,7 @@
       <!-- Profile Section -->
       <div id="lineprofile" style="display: none" class="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-8">
         <div class="flex flex-col sm:flex-row items-center sm:space-x-4 mb-4">
-          <img width="80" height="80" id="profileImage" src="" alt="Profile" class="rounded-full border-4 border-green-400 mb-3 sm:mb-0"/>
+          <img width="80px" height="80px" id="profileImage" src="" class="rounded-full border-4 border-green-400 mb-3 sm:mb-0"/>
           <div class="text-center sm:text-left">
             <div class="text-lg sm:text-xl font-semibold">สวัสดี คุณ <span id="profileName" class="text-green-600">Name</span></div>
             <div class="text-sm text-gray-600">รหัสผู้ใช้: <span id="profileUID" class="font-mono">UID</span></div>
@@ -65,11 +64,9 @@
     </div>
 
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
     <script>
       let userId = "";
-      let retryCount = 0;
-      const MAX_RETRIES = 3;
 
       const logOut = () => {
         liff.logout();
@@ -112,89 +109,44 @@
         }
       };
 
-      const initializeLiff = async () => {
-        try {
-          await liff.init({ liffId: "2006590878-7Q9VJB6o" });
-          return true;
-        } catch (error) {
-          console.error('LIFF initialization failed:', error);
-          if (retryCount < MAX_RETRIES) {
-            retryCount++;
-            console.log(`Retrying LIFF initialization (${retryCount}/${MAX_RETRIES})...`);
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            return await initializeLiff();
-          }
-          return false;
-        }
-      };
-
       const main = async () => {
-        const initialized = await initializeLiff();
-        if (!initialized) {
-          console.error('Failed to initialize LIFF after multiple retries');
-          return;
-        }
-
+        await liff.init({ liffId: "2006590878-7Q9VJB6o" });
         if (liff.isLoggedIn()) {
-          try {
-            const profile = await liff.getProfile();
-            const profileImage = document.getElementById('profileImage');
-            const profileName = document.getElementById('profileName');
-            const profileUID = document.getElementById('profileUID');
-            const lineprofile = document.getElementById('lineprofile');
+          const profile = await liff.getProfile();
 
-            profileImage.src = profile.pictureUrl;
-            profileName.innerText = profile.displayName;
-            profileUID.innerText = profile.userId;
+          profileImage.src = profile.pictureUrl;
+          profileName.innerText = profile.displayName;
+          profileUID.innerText = profile.userId;
 
-            userId = profile.userId;
-            lineprofile.style.display = "block";
+          userId = profile.userId;
+          lineprofile.style.display = "block";
 
-            await loadFarmData();
-          } catch (error) {
-            console.error('Error getting profile:', error);
-          }
+          await loadFarmData();
         } else {
           liff.login();
         }
       };
 
       const sendMessage = async () => {
-        const messageInput = document.getElementById('lineMessage');
-        if (!messageInput.value.trim()) {
-          alert('กรุณาพิมพ์ข้อความก่อนส่ง');
-          return;
-        }
-
         try {
+          if (!lineMessage.value) {
+            throw new Error('message not found')
+          }
           const response = await axios.post(
             'https://2a3d-184-22-231-98.ngrok-free.app/send-message',
             {
               userId,
-              message: messageInput.value
-            },
-            {
-              timeout: 5000 // 5 seconds timeout
+              message: lineMessage.value
             }
-          );
-          
-          if (response.data) {
-            messageInput.value = '';
-          }
+          )
+          console.log('response', response.data)
+          lineMessage.value = '';
         } catch (error) {
-          console.error('Error sending message:', error);
-          alert('ไม่สามารถส่งข้อความได้ กรุณาลองใหม่อีกครั้ง');
+          console.log('error', error)
         }
       };
 
-      // Handle Enter key in message input
-      document.getElementById('lineMessage').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-          sendMessage();
-        }
-      });
-
       main();
     </script>
-  </head>
+  </body>
 </html>
