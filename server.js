@@ -1,6 +1,11 @@
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
+const ffmpeg = require('fluent-ffmpeg');
+const fs = require('fs')
+const path = require('path');
+
+ffmpeg.setFfmpegPath('C:/ffmpeg/bin/ffmpeg.exe');
 
 require("dotenv").config();
 
@@ -12,7 +17,8 @@ const LINE_API_URL = "https://api.line.me/v2/bot/message/push";
 const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN
 const BOTNOI_API_URL = "https://api-voice.botnoi.ai/openapi/v1/generate_audio";
 const BOTNOI_API_KEY = process.env.BOTNOI_API_KEY;
-const TYPHOON_AUDIO_API_URL = "https://audio.opentyphoon.ai/gradio_api/call/run_inference"
+const VISAI_API_URL = "https://stt.infer.visai.ai/predict"
+const VISAI_API_KEY = process.env.VISAI_API_KEY
 const TYPHOON_API_URL = "https://api.opentyphoon.ai/v1/chat/completions"
 const TYPHOON_API_KEY = process.env.TYPHOON_API_KEY
 
@@ -26,17 +32,21 @@ const headers = {
 const conversations = {}
 
 const sendMessage = async (userId, message) => {
-  const body = {
-    to: userId,
-    messages: [
-      {
-        type: "text",
-        text: message,
-      },
-    ],
-  };
-  const response = await axios.post(LINE_API_URL, body, { headers });
-  return response;
+  try {
+    const body = {
+      to: userId,
+      messages: [
+        {
+          type: "text",
+          text: message,
+        },
+      ],
+    };
+    const response = await axios.post(LINE_API_URL, body, { headers });
+    return response;
+  } catch (error) {
+    console.error("Error sending text message:", error.response?.data || error.message);
+  }
 };
 
 const sendAudio = async (userId, audioUrl, duration) => {
@@ -92,20 +102,71 @@ const textToSpeech = async ( message ) => {
   }
 }
 
-const speechToText = async (userId, audioUrl) => {
+const speechToText = async (audioPath) => {
   try {
-    const response = await axios.post(`${TYPHOON_AUDIO_API_URL}`
-      , {
-        "data": [
-          {"path":"https://github.com/gradio-app/gradio/raw/main/test/test_files/audio_sample.wav"},
-          "Hello!"
-      ]}
-    )
-    // console.log(response)
+    const formData = new FormData();
+    formData.append('files', fs.createReadStream(audioPath));
+
+    const response = await axios.post(
+      VISAI_API_URL,
+      {
+        headers: { 
+          "X-API-Key": VISAI_API_KEY,
+          ...formData.getHeaders()
+        }
+      }
+    );
+
+    console.log("Transcription Result:", response.data.results.predictions.transcript);
+
+    // Delete the audio file after successful transcription
+    fs.unlinkSync(audioPath);
+    console.log(`File ${audioPath} deleted successfully.`);
+
+    return response.data.results.predictions.transcript
+
   } catch (error) {
-    throw new Error(error)
+    console.error("Error with Speech-to-Text API:", error.message);
+    // Ensure the file is deleted even in case of an error
+    if (fs.existsSync(audioPath)) {
+      fs.unlinkSync(audioPath);
+      console.log(`File ${audioPath} deleted after error.`);
+    }
+    
+    throw new Error(error);
   }
 }
+
+const getAudioContent = async (messageId) => {
+  try {
+    const response = await axios.get(`https://api-data.line.me/v2/bot/message/${messageId}/content`, {
+      headers: { Authorization: `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}` },
+      responseType: "stream"
+    });
+
+    // Define the path where the .mp4 file will be saved
+    const filePath = path.join(__dirname, `audio_${messageId}.mp4`);
+
+    // Write the stream to a file
+    const writer = fs.createWriteStream(filePath);
+    response.data.pipe(writer);
+
+    // Return a promise to ensure the file is completely written before proceeding
+    return new Promise((resolve, reject) => {
+      writer.on('finish', () => {
+        console.log(`File saved to ${filePath}`);
+        resolve(filePath); // Return the file path
+      });
+      writer.on('error', (error) => {
+        console.error('Error saving file:', error);
+        reject(error);
+      });
+    });
+  } catch (error) {
+    console.error("Error fetching audio content:", error.response?.data || error.message);
+    throw error;
+  }
+};
 
 const callTyphoon = async (userId , userMessage) => {
   try {
@@ -118,7 +179,7 @@ const callTyphoon = async (userId , userMessage) => {
     if (userConversation.length === 0) {
       userConversation.push({
         role: "system",
-        content: "You are a helpful assistant. Answer only in Thai. Your replies should be concise and polite.",
+        content: "You are a helpful female farmer assistant. Answer only in Thai. Your replies should be concise and polite. Your name are น้องเขียว",
       });
     }
 
@@ -148,7 +209,7 @@ const callTyphoon = async (userId , userMessage) => {
       }
     );
 
-    console.log(response)
+    // console.log(response)
     const typhoonReply = response.data.choices[0].message.content;
     userConversation.push({ role: "assistant", content: typhoonReply });
 
@@ -162,6 +223,16 @@ const callTyphoon = async (userId , userMessage) => {
     return "ขออภัยค่ะ ฉันไม่สามารถตอบคำถามได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง";
   }
 }
+
+const getUserProfile = async (userId) => {
+  try {
+    const response = await axios.get(`https://api.line.me/v2/bot/profile/${userId}`, { headers });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user profile:", error.response?.data || error.message);
+    return null;
+  }
+};
 
 app.post("/send-message", async (req, res) => {
   const { userId, message } = req.body;
@@ -194,15 +265,29 @@ app.post('/webhook', async (req, res) => {
     const lineEvent = events[0]
     const userId = lineEvent.source.userId
     let response;
+    
 
      // Initialize the conversation context if it doesn't exist
      if (!conversations[userId]) {
       conversations[userId] = {
         history: [],
-        state: "idle", // Possible states: "idle", "text-mode", "speech-mode"
+        state: "idle",
       };
+      
+      // ดึงข้อมูลโปรไฟล์ผู้ใช้
+      const userProfile = await getUserProfile(userId);
+      const userName = userProfile ? userProfile.displayName : "คุณ"; // ใช้ชื่อจากโปรไฟล์หรือค่าเริ่มต้น
+      
+      // ประโยคแนะนำตัว
+      const welcomeMessage = `สวัสดีค่ะ ${userName}! ฉันคือน้องเขียว ผู้ช่วยเกษตรกรของคุณค่ะ 😊\n` +
+                              `พิมพ์ "start-text" เพื่อเริ่มโหมดข้อความ หรือ "start-speech" เพื่อเริ่มโหมดเสียงได้เลยค่ะ!\n` +
+                              `หากต้องการเริ่มใหม่สามารถพิมพ์ "reset" ได้ตลอดเวลาค่ะ`;
+      
+      await sendMessage(userId, welcomeMessage);
+      console.log(lineEvent)
     }
 
+    console.log(events)
     const userMessage = lineEvent.message.text || ''; // Handle text input
     const userState = conversations[userId].state;
 
@@ -216,7 +301,7 @@ app.post('/webhook', async (req, res) => {
     } else if (userMessage === "reset") {
       conversations[userId] = {
         history: [],
-        state: "idle", // Possible states: "idle", "text-mode", "speech-mode"
+        state: "idle",
       };
       response = await sendMessage(userId, "รีเซ็ตเรียบร้อยค่ะ")
     } else if (userState === "text-mode") {
@@ -231,27 +316,28 @@ app.post('/webhook', async (req, res) => {
       // Handle speech-to-text
       let textMessage
       if (lineEvent.message.type === "audio") {
-        const userAudioUrl = lineEvent.message.content; // Retrieve audio URL
-        textMessage = await speechToText(userId, userAudioUrl);
+        const audioBuffer = await getAudioContent(lineEvent.message.id);
+        console.log(audioBuffer)
+        textMessage = await speechToText(audioBuffer);
+        console.log(textMessage)
+        textMessage = "บอกสูตรไก่ย่าง 5 อย่าง"
       } else if (lineEvent.message.type === "text") {
         textMessage = userMessage
       } else {
         return;
-      }
+      } 
 
       const typhoonReply = await callTyphoon(userId, textMessage);
       // const {audioUrl, duration} = await textToSpeech("หวัดดีฮาฟฟู้ว")
-      console.log(audioUrl, duration)
+      // console.log(audioUrl, duration)
       // response = await sendAudio(userId, audioUrl, 30000)
       response = await sendMessage(userId, typhoonReply);
 
-      // Save the audio-to-text message and reply to conversation history
       conversations[userId].history.push({ role: "user", content: textMessage });
       conversations[userId].history.push({ role: "assistant", content: typhoonReply });
     } else {
       response = await sendMessage(userId, "กรุณาพิมพ์ 'start-text' หรือ 'start-speech' เพื่อเริ่มต้นค่ะ");
     }
-
     res.json({
       message: "Send message successfully",
       responseData: response.data
