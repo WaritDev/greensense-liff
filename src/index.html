@@ -107,11 +107,8 @@
     <!-- Scripts -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
+    <script src="./utils/constants.js"></script>
     <script>
-      // Constants
-      const LIFF_ID = "2006590878-7Q9VJB6o";
-      const TIMEOUT_DURATION = 30000; // 30 seconds
-      const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
       // Global state
       const state = {
@@ -244,7 +241,6 @@
       // Setup Functions
       async function loadAllScripts() {
         const scripts = [
-          "utils/constants.js",
           "services/lineService.js",
           "services/farmService.js",
           "components/Weather.js",
