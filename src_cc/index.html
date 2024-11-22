@@ -6,19 +6,18 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>ระบบจัดการฟาร์ม</title>
-    <script src="https://api.longdo.com/map/?key=278fc2decfa5dfb5eaacfce50d3d254f"></script>
+    <title>Carbon Credit</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles/main.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-      /* Custom styles for mobile */
       body {
         -webkit-tap-highlight-color: transparent;
         overscroll-behavior-y: contain;
+        font-family: "Prompt", sans-serif;
       }
       .loading-overlay {
         position: fixed;
@@ -31,9 +30,6 @@
         justify-content: center;
         align-items: center;
         z-index: 9999;
-      }
-      .bottom-safe-area {
-        padding-bottom: env(safe-area-inset-bottom);
       }
     </style>
   </head>
@@ -52,50 +48,148 @@
     <div class="container mx-auto px-4 py-4 pb-24 sm:py-8 max-w-3xl">
       <div id="profileComponent" class="mb-6"></div>
 
-      <div class="space-y-6">
-        <div
-          id="weatherCardComponent"
-          class="bg-white rounded-xl shadow-sm p-4"
-        ></div>
-        <div
-          id="farmSummaryComponent"
-          class="bg-white rounded-xl shadow-sm p-4"
-        ></div>
-        <div
-          id="activitiesComponent"
-          class="bg-white rounded-xl shadow-sm p-4"
-        ></div>
-        <div
-          id="farmSensorComponent"
-          class="bg-white rounded-xl shadow-sm p-4"
-        ></div>
-      </div>
-    </div>
+      <!-- Carbon Credit Form -->
+      <div id="carbonCreditForm" class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold">ลงทะเบียน Carbon Credit</h2>
 
-    <!-- Fixed Bottom Bar -->
-    <div
-      id="bottomBar"
-      class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-40 bottom-safe-area"
-    >
-      <div class="max-w-md mx-auto px-4 py-3">
-        <button
-          id="manageFarmAreaBtn"
-          class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg text-base font-medium active:bg-green-700 transition-colors"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"
+        </div>
+        <form id="farmDataForm" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >พื้นที่เพาะปลูก (ไร่)</label
+              >
+              <input
+                type="number"
+                id="farmArea"
+                min="0.1"
+                step="0.1"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >วันที่เริ่มรอบ</label
+              >
+              <input
+                type="date"
+                id="cycleStart"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                required
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >วันที่สิ้นสุดรอบ</label
+              >
+              <input
+                type="date"
+                id="cycleEnd"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700"
+              >ระยะเวลาช่วงแห้ง (วัน)</label
+            >
+            <input
+              type="number"
+              id="dryPeriod"
+              min="1"
+              max="120"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+              required
             />
-          </svg>
-          <span>จัดการพื้นที่แปลงเกษตร</span>
-        </button>
+          </div>
+
+          <button
+            type="submit"
+            class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+          >
+            บันทึกข้อมูล
+          </button>
+        </form>
       </div>
-    </div>
+
+      <!-- Records Table -->
+      <div class="bg-white rounded-lg shadow-md p-4 mb-6 mx-auto max-w-full">
+        <h2 class="text-lg md:text-xl font-semibold mb-4 text-center">ประวัติการลงทะเบียน</h2>
+        
+        <div class="overflow-x-auto -mx-4 md:mx-0">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  พื้นที่ (ไร่)
+                </th>
+                <th class="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  วันที่เริ่ม
+                </th>
+                <th class="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  วันที่สิ้นสุด
+                </th>
+                <th class="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  ช่วงแห้ง (วัน)
+                </th>
+                <th class="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  เครดิต
+                </th>
+              </tr>
+            </thead>
+            <tbody id="recordsTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+          </table>
+        </div>
+      </div>
+      
+
+      <!-- Carbon Credit Summary -->
+      <div id="creditSummary" class="bg-white rounded-lg shadow-md p-4 md:p-6">
+        <h2 class="text-lg md:text-xl font-semibold mb-4 text-center">สรุป Carbon Credit</h2>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+          <div class="bg-gray-50 p-4 rounded-lg text-center">
+            <p class="text-xs md:text-sm text-gray-600 mb-1">เครดิตสะสม</p>
+            <p id="totalCredits" class="text-xl md:text-2xl font-semibold text-green-600">
+              0
+            </p>
+          </div>
+          
+          <div class="bg-gray-50 p-4 rounded-lg text-center">
+            <p class="text-xs md:text-sm text-gray-600 mb-1">การลดก๊าซเรือนกระจก<br class="sm:hidden"> (kg CO2)</p>
+            <p id="totalReduction" class="text-xl md:text-2xl font-semibold text-green-600">
+              0
+            </p>
+          </div>
+        </div>
+      </div>
+      <!-- ปุ่มแถบด้านล่าง Fixed -->
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg">
+  <div class="max-w-screen-xl mx-auto">
+    <button
+      id="exportBtn"
+      class="w-full bg-green-600 text-white px-6 py-3 rounded-lg text-base font-medium hover:bg-green-700 active:bg-green-800 transition-colors duration-200 flex items-center justify-center gap-2 shadow-md"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+      </svg>
+      Export ข้อมูล
+    </button>
+  </div>
+</div>
+
+<!-- เพิ่ม padding ด้านล่างให้กับ content เพื่อไม่ให้ถูกปุ่มบัง -->
+<div class="pb-24"></div>
+
+      
 
     <!-- Toast Container -->
     <div
@@ -104,38 +198,27 @@
     ></div>
 
     <!-- Scripts -->
-    <!-- Scripts -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
     <script src="./utils/constants.js"></script>
+    <script src="./components/Profile.js"></script>
     <script>
       // Global state
       const state = {
         userId: null,
         profile: null,
-        farmArea: null,
+        records: [],
+        farmData: {
+          credits: 0,
+          reduction: 0,
+        },
       };
 
-      // Utility Functions
-      function timeoutPromise(ms) {
-        return new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Operation timed out")), ms);
-        });
-      }
-
-      function withTimeout(promise, ms) {
-        return Promise.race([promise, timeoutPromise(ms)]);
-      }
-
-      function loadScript(url) {
-        return new Promise((resolve, reject) => {
-          const timestamp = new Date().getTime();
-          const script = document.createElement("script");
-          script.src = `${url}?v=${timestamp}`;
-          script.onload = resolve;
-          script.onerror = reject;
-          document.body.appendChild(script);
-        });
+      // Carbon Credit Calculations
+      function calculateCarbonCredit(farmArea, dryPeriod) {
+        const reductionPerRai = 500; // 0.5 ตัน = 500 kg
+        const reduction = farmArea * reductionPerRai * (dryPeriod / 30);
+        const credits = reduction / 1000;
+        return { reduction, credits };
       }
 
       // UI Helper Functions
@@ -158,253 +241,190 @@
         }, 3000);
       }
 
-      const loadingOverlay = document.getElementById("loadingOverlay");
-      function showLoading(message = "กำลังโหลด...") {
-        loadingOverlay.style.display = "flex";
-        document.querySelector("#loadingOverlay p").textContent = message;
-      }
-
-      function hideLoading() {
-        loadingOverlay.style.display = "none";
-      }
-
-      // Map Functions
-      function waitForLongdoMap() {
-        return new Promise((resolve) => {
-          if (window.longdo && typeof window.longdo.Map === "function") {
-            resolve();
-            return;
-          }
-
-          const checkInterval = setInterval(() => {
-            if (window.longdo && typeof window.longdo.Map === "function") {
-              clearInterval(checkInterval);
-              resolve();
-            }
-          }, 100);
+      function formatDate(dateString) {
+        return new Date(dateString).toLocaleDateString("th-TH", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
         });
       }
 
-      // LIFF Functions
-      function waitForLiff() {
-        return new Promise((resolve, reject) => {
-          if (window.liff) {
-            resolve(window.liff);
-            return;
-          }
+      function updateTable() {
+        const tbody = document.getElementById("recordsTableBody");
+        tbody.innerHTML = "";
 
-          let retries = 0;
-          const maxRetries = 50;
-
-          const checkInterval = setInterval(() => {
-            if (window.liff) {
-              clearInterval(checkInterval);
-              resolve(window.liff);
-              return;
-            }
-
-            retries++;
-            if (retries >= maxRetries) {
-              clearInterval(checkInterval);
-              reject(new Error("LIFF SDK failed to load"));
-            }
-          }, 100);
+        state.records.forEach((record) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${
+                      record.farmArea
+                    }</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(
+                      record.cycleStart
+                    )}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(
+                      record.cycleEnd
+                    )}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${
+                      record.dryPeriod
+                    }</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${record.credits.toFixed(
+                      2
+                    )}</td>
+                `;
+          tbody.appendChild(row);
         });
       }
 
-      // Farm Area Management
-      async function checkAndSetupFarmArea() {
-        await waitForLongdoMap();
+      function updateSummary() {
+        const totalCredits = state.records.reduce(
+          (sum, record) => sum + record.credits,
+          0
+        );
+        const totalReduction = state.records.reduce(
+          (sum, record) => sum + record.reduction,
+          0
+        );
 
-        const storedFarmArea = localStorage.getItem("farmArea");
-        if (!storedFarmArea) {
-          try {
-            const farmArea = await createFarmAreaSelector();
-            if (farmArea) {
-              localStorage.setItem("farmArea", JSON.stringify(farmArea));
-              await axios.post(`${API_BASE_URL}/farms`, {
-                userId: state.userId,
-                ...farmArea,
-              });
-              return farmArea;
-            }
-            throw new Error("Farm area selection cancelled");
-          } catch (error) {
-            console.error("Error setting up farm area:", error);
-            throw error;
-          }
-        }
-        return JSON.parse(storedFarmArea);
+        document.getElementById("totalCredits").textContent =
+          totalCredits.toFixed(2);
+        document.getElementById("totalReduction").textContent =
+          totalReduction.toFixed(0);
       }
 
-      // Setup Functions
-      async function loadAllScripts() {
-        const scripts = [
-          "services/lineService.js",
-          "services/farmService.js",
-          "components/Weather.js",
-          "components/PrivacyPolicy.js",
-          "components/FarmAreaSelector.js",
-          "components/Profile.js",
-          "components/FarmSummary.js",
-          "components/Activities.js",
-          "components/FarmSensorData.js",
-        ];
+      // Export Function
+      function exportToExcel() {
+        const ws = XLSX.utils.json_to_sheet(
+          state.records.map((record) => ({
+            "พื้นที่ (ไร่)": record.farmArea,
+            วันที่เริ่ม: formatDate(record.cycleStart),
+            วันที่สิ้นสุด: formatDate(record.cycleEnd),
+            "ช่วงแห้ง (วัน)": record.dryPeriod,
+            เครดิต: record.credits.toFixed(2),
+            "การลดก๊าซเรือนกระจก (kg CO2)": record.reduction.toFixed(2),
+          }))
+        );
 
-        for (const script of scripts) {
-          try {
-            await loadScript(script);
-          } catch (error) {
-            console.error(`Error loading script ${script}:`, error);
-            throw error;
-          }
-        }
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Carbon Credits");
+
+        const fileName = `carbon_credits_${
+          new Date().toISOString().split("T")[0]
+        }.xlsx`;
+        XLSX.writeFile(wb, fileName);
       }
 
-      function setupFarmAreaButton() {
-        const manageFarmAreaBtn = document.getElementById("manageFarmAreaBtn");
-        manageFarmAreaBtn.onclick = async () => {
-          try {
-            // แสดงสถานะกำลังโหลด
-            manageFarmAreaBtn.disabled = true;
-            manageFarmAreaBtn.innerHTML = `
-        <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-        <span>กำลังโหลดแผนที่...</span>
-      `;
+      // Form Handling
+      document
+        .getElementById("farmDataForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
 
-            // รอ mock loading 1 วินาที
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+          const formData = {
+            farmArea: parseFloat(document.getElementById("farmArea").value),
+            cycleStart: document.getElementById("cycleStart").value,
+            cycleEnd: document.getElementById("cycleEnd").value,
+            dryPeriod: parseInt(document.getElementById("dryPeriod").value),
+          };
 
-            const newFarmArea = await createFarmAreaSelector();
-
-            if (newFarmArea) {
-              // แสดงสถานะกำลังบันทึก
-              manageFarmAreaBtn.innerHTML = `
-          <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-          <span>กำลังบันทึก...</span>
-        `;
-
-              // Mock การบันทึกข้อมูล
-              await new Promise((resolve) => setTimeout(resolve, 800));
-
-              // Mock การอัพเดทข้อมูลใน localStorage
-              localStorage.setItem("farmArea", JSON.stringify(newFarmArea));
-
-              // Mock แสดง toast สำเร็จ
-              showToast("บันทึกข้อมูลพื้นที่เรียบร้อย");
-            }
-          } catch (error) {
-            console.error("Error managing farm area:", error);
-            showToast("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง", "error");
-          } finally {
-            // คืนค่าปุ่มกลับสู่สถานะปกติ
-            manageFarmAreaBtn.disabled = false;
-            manageFarmAreaBtn.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-        </svg>
-        <span>จัดการพื้นที่แปลงเกษตร</span>
-      `;
-          }
-        };
-      }
-
-      async function initializeComponents(profile) {
-        try {
-          showLoading("กำลังโหลดข้อมูล...");
-          state.profile = profile;
-          initializeProfile(profile);
-
-          const initializationSteps = [
-            { name: "ตรวจสอบข้อมูลพื้นที่", promise: checkAndSetupFarmArea },
-            { name: "โหลดข้อมูลฟาร์ม", promise: loadFarmData },
-            { name: "โหลดข้อมูลเซ็นเซอร์", promise: loadFarmDataFromCSV },
-          ];
-
-          const results = {};
-          for (const step of initializationSteps) {
-            document.querySelector("#loadingOverlay p").textContent = step.name;
-            results[step.name] = await withTimeout(
-              step.promise(),
-              TIMEOUT_DURATION
-            );
-          }
-
-          const farmArea = results["ตรวจสอบข้อมูลพื้นที่"];
-          const farmData = results["โหลดข้อมูลฟาร์ม"];
-          const farmSensorData = results["โหลดข้อมูลเซ็นเซอร์"];
-
-          state.farmArea = farmArea;
-
-          // Initialize UI components
-          fetchWeatherData();
-          updateFarmSummary({ ...farmData, farmArea });
-          updateActivities(farmData.activities || []);
-          updateFarmSensorData(farmSensorData);
-
-          // Set up refresh intervals
-          setInterval(fetchWeatherData, REFRESH_INTERVAL);
-          setInterval(async () => {
-            try {
-              const newSensorData = await loadFarmDataFromCSV();
-              updateFarmSensorData(newSensorData);
-            } catch (error) {
-              console.error("Error refreshing sensor data:", error);
-            }
-          }, REFRESH_INTERVAL);
-
-          setupFarmAreaButton();
-        } catch (error) {
-          console.error("Error initializing components:", error);
-          showToast(
-            "เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง",
-            "error"
+          const { reduction, credits } = calculateCarbonCredit(
+            formData.farmArea,
+            formData.dryPeriod
           );
-          throw error;
-        } finally {
-          hideLoading();
-        }
-      }
 
-      // Main Application Flow
+          const record = {
+            ...formData,
+            reduction,
+            credits,
+            timestamp: new Date().toISOString(),
+          };
+
+          state.records.push(record);
+          updateTable();
+          updateSummary();
+
+          e.target.reset();
+          showToast("บันทึกข้อมูลสำเร็จ");
+        });
+
+      // Export Button Handler
+      document
+        .getElementById("exportBtn")
+        .addEventListener("click", exportToExcel);
+
+      // Initialize Application
       async function main() {
         try {
-          showLoading("กำลังเริ่มต้นระบบ...");
-
-          // Wait for LIFF SDK and initialize
-          const liff = await waitForLiff();
-          await withTimeout(liff.init({ liffId: LIFF_ID }), TIMEOUT_DURATION);
+          // Initialize LIFF
+          await liff.init({ liffId: LIFF_ID });
 
           if (!liff.isLoggedIn()) {
             liff.login();
             return;
           }
 
-          // Load required scripts
-          await loadAllScripts();
-
-          // Get user profile and initialize
-          const profile = await withTimeout(
-            liff.getProfile(),
-            TIMEOUT_DURATION
-          );
+          const profile = await liff.getProfile();
           state.userId = profile.userId;
-          userId = profile.userId;
+          state.profile = profile;
+          initializeProfile(profile);
 
-          await initializeComponents(profile);
+          // Here you would typically load saved records from backend
+          // For now we'll use sample data
+          updateTable();
+          updateSummary();
+
+          document.getElementById("loadingOverlay").style.display = "none";
+
+        
+
+    
         } catch (error) {
-          console.error("Error in main:", error);
-          showToast(
-            "เกิดข้อผิดพลาดในการเริ่มต้นระบบ กรุณาลองใหม่อีกครั้ง",
-            "error"
-          );
-        } finally {
-          hideLoading();
+          console.error("Error initializing app:", error);
+          showToast("เกิดข้อผิดพลาดในการโหลดแอป", "error");
         }
       }
 
-      // Start the application when DOM is ready
-      document.addEventListener("DOMContentLoaded", main);
+      // Form Validation
+      function setupFormValidation() {
+        const cycleStartInput = document.getElementById("cycleStart");
+        const cycleEndInput = document.getElementById("cycleEnd");
+        const dryPeriodInput = document.getElementById("dryPeriod");
+
+        cycleStartInput.addEventListener("change", () => {
+          const startDate = new Date(cycleStartInput.value);
+          const endDate = new Date(cycleEndInput.value);
+
+          if (endDate && startDate > endDate) {
+            cycleEndInput.value = "";
+            showToast("วันที่เริ่มต้นต้องมาก่อนวันที่สิ้นสุด", "error");
+          }
+        });
+
+        cycleEndInput.addEventListener("change", () => {
+          const startDate = new Date(cycleStartInput.value);
+          const endDate = new Date(cycleEndInput.value);
+
+          if (startDate && endDate < startDate) {
+            cycleEndInput.value = "";
+            showToast("วันที่สิ้นสุดต้องมาหลังวันที่เริ่มต้น", "error");
+          }
+        });
+
+        dryPeriodInput.addEventListener("input", () => {
+          const value = parseInt(dryPeriodInput.value);
+          if (value < 1) {
+            dryPeriodInput.value = 1;
+          } else if (value > 120) {
+            dryPeriodInput.value = 120;
+          }
+        });
+      }
+
+      // Initialize form validation
+      setupFormValidation();
+
+      // Start the application
+      main();
     </script>
   </body>
 </html>
