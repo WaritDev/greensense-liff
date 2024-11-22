@@ -1,7 +1,7 @@
 const loadFarmData = async () => {
     try {
       const mockData = {
-        totalHouses: 5,
+        totalHouses: 1999,
         totalAnimals: 1500,
         totalIncome: 250000,
         activities: [
