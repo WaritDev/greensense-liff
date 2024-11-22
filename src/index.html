@@ -97,6 +97,13 @@
       </div>
     </div>
 
+    <!-- ข้อความแจ้งเตือนที่มุมล่าง -->
+    <div
+      class="fixed bottom-20 left-0 right-0 text-center text-sm text-gray-500 pb-2"
+    >
+      กรุณาปิดเปิดใหม่อีกครั้งหากข้อมูลไม่โหลด
+    </div>
+
     <!-- Toast Container -->
     <div
       id="toastContainer"
@@ -316,7 +323,10 @@
           initializeProfile(profile);
 
           const initializationSteps = [
-            { name: "ตรวจสอบข้อมูลพื้นที่", promise: checkAndSetupFarmArea },
+            {
+              name: "ตรวจสอบข้อมูลพื้นที่ ใช้เวลาสักครู่...",
+              promise: checkAndSetupFarmArea,
+            },
             { name: "โหลดข้อมูลฟาร์ม", promise: loadFarmData },
             { name: "โหลดข้อมูลเซ็นเซอร์", promise: loadFarmDataFromCSV },
           ];
