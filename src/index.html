@@ -234,7 +234,6 @@
       async function initializeComponents(profile) {
         showLoading();
         state.profile = profile;
-        initializeProfile(profile);
 
         try {
           const farmArea = await checkAndSetupFarmArea();
@@ -411,7 +410,6 @@
             state.farmArea = farmArea;
 
             // Initialize UI components
-            initializeProfile(profile);
             fetchWeatherData();
             updateFarmSummary({ ...farmData, farmArea });
             updateActivities(farmData.activities || []);
