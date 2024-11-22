@@ -1,2 +1,2 @@
 LIFF_ID=2006590878-7Q9VJB6o
-Richmenu1: richmenu-91eabaa71994f6a45baa4d6324dd5e2d
+Richmenu1: richmenu-70f3e76eb77681f0c534dc43320bd566
