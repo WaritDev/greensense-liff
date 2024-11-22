@@ -54,6 +54,7 @@ const loadFarmDataFromCSV = async () => {
       throw new Error('LINE UID column not found in CSV');
     }
 
+    console.log(userId)
     const userFarms = data.filter(row => row[uidIndex] === userId);
     return userFarms;
   } catch (error) {
