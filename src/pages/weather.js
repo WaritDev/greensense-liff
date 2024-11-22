@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     
     try {
       const response = await fetch(
-        `https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${LAT_LONG}&lang=th`
+        `http://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${LAT_LONG}&lang=th`
       );
       const data = await response.json();
       res.status(200).json(data);
@@ -13,4 +13,3 @@ export default async function handler(req, res) {
       res.status(500).json({ error: 'Failed to fetch weather data' });
     }
   }
-  

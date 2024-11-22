@@ -1,8 +1,6 @@
-// Weather.js
 const fetchWeatherData = async () => {
     try {
-      // เปลี่ยนมาใช้ API Route ภายในแทน
-      const response = await fetch('/api/weather');
+      const response = await fetch('https://api.weatherapi.com/v1/current.json?key=729d42b6df004d3cb8d102651242211&q=14.235,100.5018&lang=th');
       const data = await response.json();
       updateWeatherCard(data);
     } catch (error) {
@@ -33,7 +31,7 @@ const fetchWeatherData = async () => {
         
         <div class="flex items-center justify-center mb-6">
           <div class="text-center">
-            <img src="https:${weatherData.current.condition.icon}" 
+            <img src="${weatherData.current.condition.icon}" 
                  alt="${weatherData.current.condition.text}"
                  class="w-20 h-20 mx-auto mb-2">
             <p class="text-gray-600 text-lg">${weatherData.current.condition.text}</p>
