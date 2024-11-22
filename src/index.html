@@ -54,6 +54,10 @@
 
       <div class="space-y-6">
         <div
+          id="weatherCardComponent"
+          class="bg-white rounded-xl shadow-sm p-4"
+        ></div>
+        <div
           id="farmSummaryComponent"
           class="bg-white rounded-xl shadow-sm p-4"
         ></div>
@@ -121,6 +125,7 @@
           await loadScript("utils/constants.js");
           await loadScript("services/lineService.js");
           await loadScript("services/farmService.js");
+          await loadScript("components/Weather.js");
           await loadScript("components/PrivacyPolicy.js");
           await loadScript("components/FarmAreaSelector.js");
           await loadScript("components/Profile.js");
@@ -246,6 +251,12 @@
             ...farmData,
             farmArea,
           };
+
+          // เรียกใช้งานฟังก์ชัน
+          fetchWeatherData();
+
+          // อัพเดทข้อมูลทุก 5 นาที
+          setInterval(fetchWeatherData, 5 * 60 * 1000);
 
           updateFarmSummary(completeData);
           updateActivities(completeData.activities);
