@@ -2,12 +2,18 @@
 <html lang="th">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>ระบบจัดการฟาร์ม</title>
     <script src="https://api.longdo.com/map/?key=278fc2decfa5dfb5eaacfce50d3d254f"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles/main.css">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles/main.css" />
     <style>
       /* Custom styles for mobile */
       body {
@@ -35,7 +41,9 @@
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
       <div class="flex flex-col items-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent"></div>
+        <div
+          class="animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent"
+        ></div>
         <p class="mt-4 text-gray-600 font-prompt">กำลังโหลด...</p>
       </div>
     </div>
@@ -43,20 +51,42 @@
     <!-- Main Content -->
     <div class="container mx-auto px-4 py-4 pb-24 sm:py-8 max-w-3xl">
       <div id="profileComponent" class="mb-6"></div>
-      
+
       <div class="space-y-6">
-        <div id="farmSummaryComponent" class="bg-white rounded-xl shadow-sm p-4"></div>
-        <div id="activitiesComponent" class="bg-white rounded-xl shadow-sm p-4"></div>
-        <div id="farmSensorComponent" class="bg-white rounded-xl shadow-sm p-4"></div>
+        <div
+          id="farmSummaryComponent"
+          class="bg-white rounded-xl shadow-sm p-4"
+        ></div>
+        <div
+          id="activitiesComponent"
+          class="bg-white rounded-xl shadow-sm p-4"
+        ></div>
+        <div
+          id="farmSensorComponent"
+          class="bg-white rounded-xl shadow-sm p-4"
+        ></div>
       </div>
     </div>
 
     <!-- Fixed Bottom Bar -->
-    <div id="bottomBar" class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-40 bottom-safe-area">
+    <div
+      id="bottomBar"
+      class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-40 bottom-safe-area"
+    >
       <div class="max-w-md mx-auto px-4 py-3">
-        <button id="manageFarmAreaBtn" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg text-base font-medium active:bg-green-700 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+        <button
+          id="manageFarmAreaBtn"
+          class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg text-base font-medium active:bg-green-700 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"
+            />
           </svg>
           <span>จัดการพื้นที่แปลงเกษตร</span>
         </button>
@@ -64,66 +94,97 @@
     </div>
 
     <!-- Toast Container -->
-    <div id="toastContainer" class="fixed bottom-24 left-4 right-4 z-50 pointer-events-none"></div>
+    <div
+      id="toastContainer"
+      class="fixed bottom-24 left-4 right-4 z-50 pointer-events-none"
+    ></div>
 
     <!-- Scripts -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
-    <script src="utils/constants.js"></script>
-    <script src="services/lineService.js"></script>
-    <script src="services/farmService.js"></script>
-    <script src="components/PrivacyPolicy.js"></script>
-    <script src="components/FarmAreaSelector.js"></script>
-    <script src="components/Profile.js"></script>
-    <script src="components/FarmSummary.js"></script>
-    <script src="components/Activities.js"></script>
-    <script src="components/FarmSensorData.js"></script>
-    
+    <script>
+      // สร้างฟังก์ชันสำหรับเพิ่ม timestamp ใน URL
+      function loadScript(url) {
+        return new Promise((resolve, reject) => {
+          const timestamp = new Date().getTime();
+          const script = document.createElement("script");
+          script.src = `${url}?v=${timestamp}`;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.body.appendChild(script);
+        });
+      }
+
+      // โหลด scripts ตามลำดับ
+      async function loadAllScripts() {
+        try {
+          await loadScript("utils/constants.js");
+          await loadScript("services/lineService.js");
+          await loadScript("services/farmService.js");
+          await loadScript("components/PrivacyPolicy.js");
+          await loadScript("components/FarmAreaSelector.js");
+          await loadScript("components/Profile.js");
+          await loadScript("components/FarmSummary.js");
+          await loadScript("components/Activities.js");
+          await loadScript("components/FarmSensorData.js");
+
+          // เริ่มการทำงานของแอพหลังจากโหลด scripts ทั้งหมดเสร็จ
+          main();
+        } catch (error) {
+          console.error("Error loading scripts:", error);
+        }
+      }
+
+      // เริ่มโหลด scripts เมื่อหน้าเว็บโหลดเสร็จ
+      document.addEventListener("DOMContentLoaded", loadAllScripts);
+    </script>
+
     <script>
       // Global state
       const state = {
         userId: null,
         profile: null,
-        farmArea: null
+        farmArea: null,
       };
 
       // Toast function
-      function showToast(message, type = 'success') {
-        const toast = document.createElement('div');
+      function showToast(message, type = "success") {
+        const toast = document.createElement("div");
         toast.className = `mb-2 p-4 rounded-lg text-center pointer-events-auto ${
-          type === 'success' ? 'bg-green-100 text-green-700 border border-green-400' :
-          'bg-red-100 text-red-700 border border-red-400'
+          type === "success"
+            ? "bg-green-100 text-green-700 border border-green-400"
+            : "bg-red-100 text-red-700 border border-red-400"
         }`;
         toast.textContent = message;
-        
-        const container = document.getElementById('toastContainer');
+
+        const container = document.getElementById("toastContainer");
         container.appendChild(toast);
-        
+
         setTimeout(() => {
-          toast.style.opacity = '0';
-          toast.style.transition = 'opacity 0.3s ease-out';
+          toast.style.opacity = "0";
+          toast.style.transition = "opacity 0.3s ease-out";
           setTimeout(() => toast.remove(), 300);
         }, 3000);
       }
 
       // Loading overlay management
-      const loadingOverlay = document.getElementById('loadingOverlay');
+      const loadingOverlay = document.getElementById("loadingOverlay");
       function showLoading() {
-        loadingOverlay.style.display = 'flex';
+        loadingOverlay.style.display = "flex";
       }
       function hideLoading() {
-        loadingOverlay.style.display = 'none';
+        loadingOverlay.style.display = "none";
       }
 
       // Wait for Longdo Map to be fully loaded
       function waitForLongdoMap() {
         return new Promise((resolve) => {
           if (window.longdo && window.longdo.Map) {
-            if (typeof window.longdo.Map === 'function') {
+            if (typeof window.longdo.Map === "function") {
               resolve();
             } else {
               const checkInterval = setInterval(() => {
-                if (typeof window.longdo.Map === 'function') {
+                if (typeof window.longdo.Map === "function") {
                   clearInterval(checkInterval);
                   resolve();
                 }
@@ -132,7 +193,7 @@
           } else {
             const checkInterval = setInterval(() => {
               if (window.longdo && window.longdo.Map) {
-                if (typeof window.longdo.Map === 'function') {
+                if (typeof window.longdo.Map === "function") {
                   clearInterval(checkInterval);
                   resolve();
                 }
@@ -144,22 +205,22 @@
 
       async function checkAndSetupFarmArea() {
         await waitForLongdoMap();
-        
-        const storedFarmArea = localStorage.getItem('farmArea');
+
+        const storedFarmArea = localStorage.getItem("farmArea");
         if (!storedFarmArea) {
           try {
             const farmArea = await createFarmAreaSelector();
             if (farmArea) {
-              localStorage.setItem('farmArea', JSON.stringify(farmArea));
+              localStorage.setItem("farmArea", JSON.stringify(farmArea));
               await axios.post(`${API_BASE_URL}/farms`, {
                 userId: state.userId,
-                ...farmArea
+                ...farmArea,
               });
               return farmArea;
             }
-            throw new Error('Farm area selection cancelled');
+            throw new Error("Farm area selection cancelled");
           } catch (error) {
-            console.error('Error setting up farm area:', error);
+            console.error("Error setting up farm area:", error);
             throw error;
           }
         }
@@ -171,27 +232,28 @@
         showLoading();
         state.profile = profile;
         initializeProfile(profile);
-        
+
         try {
           const farmArea = await checkAndSetupFarmArea();
           state.farmArea = farmArea;
-          
+
           const [farmData, farmSensorData] = await Promise.all([
             loadFarmData(),
-            loadFarmDataFromCSV()
+            loadFarmDataFromCSV(),
           ]);
-          
+
           const completeData = {
             ...farmData,
-            farmArea
+            farmArea,
           };
-          
+
           updateFarmSummary(completeData);
           updateActivities(completeData.activities);
           updateFarmSensorData(farmSensorData);
 
           // Set up manage farm area button
-          const manageFarmAreaBtn = document.getElementById('manageFarmAreaBtn');
+          const manageFarmAreaBtn =
+            document.getElementById("manageFarmAreaBtn");
           manageFarmAreaBtn.onclick = async () => {
             try {
               manageFarmAreaBtn.disabled = true;
@@ -199,31 +261,34 @@
                 <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                 <span>กำลังโหลดแผนที่...</span>
               `;
-              
+
               await waitForLongdoMap();
               const newFarmArea = await createFarmAreaSelector();
-              
+
               if (newFarmArea) {
                 manageFarmAreaBtn.innerHTML = `
                   <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                   <span>กำลังบันทึก...</span>
                 `;
-                
-                localStorage.setItem('farmArea', JSON.stringify(newFarmArea));
+
+                localStorage.setItem("farmArea", JSON.stringify(newFarmArea));
                 state.farmArea = newFarmArea;
-                await axios.put(`${API_BASE_URL}/farms/${state.userId}`, newFarmArea);
-                
+                await axios.put(
+                  `${API_BASE_URL}/farms/${state.userId}`,
+                  newFarmArea
+                );
+
                 const updatedFarmData = await loadFarmData();
                 updateFarmSummary({
                   ...updatedFarmData,
-                  farmArea: newFarmArea
+                  farmArea: newFarmArea,
                 });
-                
-                showToast('บันทึกข้อมูลพื้นที่เรียบร้อย');
+
+                showToast("บันทึกข้อมูลพื้นที่เรียบร้อย");
               }
             } catch (error) {
-              console.error('Error managing farm area:', error);
-              showToast('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง', 'error');
+              console.error("Error managing farm area:", error);
+              showToast("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง", "error");
             } finally {
               manageFarmAreaBtn.disabled = false;
               manageFarmAreaBtn.innerHTML = `
@@ -234,10 +299,12 @@
               `;
             }
           };
-
         } catch (error) {
-          console.error('Error initializing components:', error);
-          showToast('เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง', 'error');
+          console.error("Error initializing components:", error);
+          showToast(
+            "เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง",
+            "error"
+          );
         } finally {
           hideLoading();
         }
@@ -249,7 +316,7 @@
           if (liff.isLoggedIn()) {
             const profile = await liff.getProfile();
             userId = profile.userId;
-            
+
             // Initialize all components
             await initializeComponents(profile);
 
@@ -262,7 +329,7 @@
             liff.login();
           }
         } catch (error) {
-          console.error('Error in main:', error);
+          console.error("Error in main:", error);
         }
       };
 

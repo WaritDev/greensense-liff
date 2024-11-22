@@ -4,7 +4,7 @@ const initializeProfile = (profile) => {
         <div class="flex flex-col sm:flex-row items-center sm:space-x-4 mb-4">
           <img width="80px" height="80px" src="${profile.pictureUrl}" class="rounded-full border-4 border-green-400 mb-3 sm:mb-0"/>
           <div class="text-center sm:text-left">
-            <div class="text-lg sm:text-xl font-semibold">สวัสดี คุณ <span class="text-green-600">${profile.displayName}</span></div>
+            <div class="text-lg sm:text-xl font-semibold"> <span class="text-green-600">${profile.displayName}</span></div>
             <div class="text-sm text-gray-600">รหัสผู้ใช้: <span class="font-mono">${profile.userId}</span></div>
           </div>
         </div>
