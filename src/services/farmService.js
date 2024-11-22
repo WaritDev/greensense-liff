@@ -46,7 +46,6 @@ const loadFarmDataFromCSV = async () => {
     const headers = validRows[0];
     const data = validRows.slice(1);
     
-    // ค้นหา column ที่เกี่ยวข้องกับ LINE UID
     const uidIndex = headers.findIndex(header => 
       header.toLowerCase().includes('line') || header.toLowerCase().includes('uid')
     );
@@ -55,20 +54,8 @@ const loadFarmDataFromCSV = async () => {
       throw new Error('LINE UID column not found in CSV');
     }
 
-    // กรองข้อมูลเฉพาะของเกษตรกรคนนั้นๆ
     const userFarms = data.filter(row => row[uidIndex] === userId);
-    
-    // แปลงข้อมูลให้อยู่ในรูปแบบที่ต้องการ
-    const farmData = userFarms.map(row => ({
-      fieldId: row[headers.findIndex(h => h.includes('field'))],
-      area: parseFloat(row[headers.findIndex(h => h.includes('area'))]),
-      cropType: row[headers.findIndex(h => h.includes('crop'))],
-      plantingDate: row[headers.findIndex(h => h.includes('planting'))],
-      expectedHarvestDate: row[headers.findIndex(h => h.includes('harvest'))],
-      status: row[headers.findIndex(h => h.includes('status'))]
-    }));
-    
-    return farmData;
+    return userFarms;
   } catch (error) {
     console.error('Error loading farm data from CSV:', error);
     return [];
