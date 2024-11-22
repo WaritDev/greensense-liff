@@ -104,10 +104,33 @@
     ></div>
 
     <!-- Scripts -->
+    <!-- Scripts -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
     <script>
-      // สร้างฟังก์ชันสำหรับเพิ่ม timestamp ใน URL
+      // Constants
+      const LIFF_ID = "2006590878-7Q9VJB6o";
+      const TIMEOUT_DURATION = 30000; // 30 seconds
+      const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+      // Global state
+      const state = {
+        userId: null,
+        profile: null,
+        farmArea: null,
+      };
+
+      // Utility Functions
+      function timeoutPromise(ms) {
+        return new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("Operation timed out")), ms);
+        });
+      }
+
+      function withTimeout(promise, ms) {
+        return Promise.race([promise, timeoutPromise(ms)]);
+      }
+
       function loadScript(url) {
         return new Promise((resolve, reject) => {
           const timestamp = new Date().getTime();
@@ -119,38 +142,7 @@
         });
       }
 
-      // โหลด scripts ตามลำดับ
-      async function loadAllScripts() {
-        try {
-          await loadScript("utils/constants.js");
-          await loadScript("services/lineService.js");
-          await loadScript("services/farmService.js");
-          await loadScript("components/Weather.js");
-          await loadScript("components/PrivacyPolicy.js");
-          await loadScript("components/FarmAreaSelector.js");
-          await loadScript("components/Profile.js");
-          await loadScript("components/FarmSummary.js");
-          await loadScript("components/Activities.js");
-          await loadScript("components/FarmSensorData.js");
-
-        } catch (error) {
-          console.error("Error loading scripts:", error);
-        }
-      }
-
-      // เริ่มโหลด scripts เมื่อหน้าเว็บโหลดเสร็จ
-      document.addEventListener("DOMContentLoaded", loadAllScripts);
-    </script>
-
-    <script>
-      // Global state
-      const state = {
-        userId: null,
-        profile: null,
-        farmArea: null,
-      };
-
-      // Toast function
+      // UI Helper Functions
       function showToast(message, type = "success") {
         const toast = document.createElement("div");
         toast.className = `mb-2 p-4 rounded-lg text-center pointer-events-auto ${
@@ -170,42 +162,61 @@
         }, 3000);
       }
 
-      // Loading overlay management
       const loadingOverlay = document.getElementById("loadingOverlay");
-      function showLoading() {
+      function showLoading(message = "กำลังโหลด...") {
         loadingOverlay.style.display = "flex";
+        document.querySelector("#loadingOverlay p").textContent = message;
       }
+
       function hideLoading() {
         loadingOverlay.style.display = "none";
       }
 
-      // Wait for Longdo Map to be fully loaded
+      // Map Functions
       function waitForLongdoMap() {
         return new Promise((resolve) => {
-          if (window.longdo && window.longdo.Map) {
-            if (typeof window.longdo.Map === "function") {
-              resolve();
-            } else {
-              const checkInterval = setInterval(() => {
-                if (typeof window.longdo.Map === "function") {
-                  clearInterval(checkInterval);
-                  resolve();
-                }
-              }, 100);
-            }
-          } else {
-            const checkInterval = setInterval(() => {
-              if (window.longdo && window.longdo.Map) {
-                if (typeof window.longdo.Map === "function") {
-                  clearInterval(checkInterval);
-                  resolve();
-                }
-              }
-            }, 100);
+          if (window.longdo && typeof window.longdo.Map === "function") {
+            resolve();
+            return;
           }
+
+          const checkInterval = setInterval(() => {
+            if (window.longdo && typeof window.longdo.Map === "function") {
+              clearInterval(checkInterval);
+              resolve();
+            }
+          }, 100);
         });
       }
 
+      // LIFF Functions
+      function waitForLiff() {
+        return new Promise((resolve, reject) => {
+          if (window.liff) {
+            resolve(window.liff);
+            return;
+          }
+
+          let retries = 0;
+          const maxRetries = 50;
+
+          const checkInterval = setInterval(() => {
+            if (window.liff) {
+              clearInterval(checkInterval);
+              resolve(window.liff);
+              return;
+            }
+
+            retries++;
+            if (retries >= maxRetries) {
+              clearInterval(checkInterval);
+              reject(new Error("LIFF SDK failed to load"));
+            }
+          }, 100);
+        });
+      }
+
+      // Farm Area Management
       async function checkAndSetupFarmArea() {
         await waitForLongdoMap();
 
@@ -230,88 +241,167 @@
         return JSON.parse(storedFarmArea);
       }
 
-      // Initialize components with loading states
-      async function initializeComponents(profile) {
-        showLoading();
-        state.profile = profile;
-        initializeProfile(profile);
+      // Setup Functions
+      async function loadAllScripts() {
+        const scripts = [
+          "utils/constants.js",
+          "services/lineService.js",
+          "services/farmService.js",
+          "components/Weather.js",
+          "components/PrivacyPolicy.js",
+          "components/FarmAreaSelector.js",
+          "components/Profile.js",
+          "components/FarmSummary.js",
+          "components/Activities.js",
+          "components/FarmSensorData.js",
+        ];
 
+        for (const script of scripts) {
+          try {
+            await loadScript(script);
+          } catch (error) {
+            console.error(`Error loading script ${script}:`, error);
+            throw error;
+          }
+        }
+      }
+
+      function setupFarmAreaButton() {
+        const manageFarmAreaBtn = document.getElementById("manageFarmAreaBtn");
+        manageFarmAreaBtn.onclick = async () => {
+          try {
+            manageFarmAreaBtn.disabled = true;
+            manageFarmAreaBtn.innerHTML = `
+            <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+            <span>กำลังโหลดแผนที่...</span>
+          `;
+
+            await waitForLongdoMap();
+            const newFarmArea = await createFarmAreaSelector();
+
+            if (newFarmArea) {
+              manageFarmAreaBtn.innerHTML = `
+              <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+              <span>กำลังบันทึก...</span>
+            `;
+
+              localStorage.setItem("farmArea", JSON.stringify(newFarmArea));
+              state.farmArea = newFarmArea;
+              await axios.put(
+                `${API_BASE_URL}/farms/${state.userId}`,
+                newFarmArea
+              );
+
+              const updatedFarmData = await loadFarmData();
+              updateFarmSummary({
+                ...updatedFarmData,
+                farmArea: newFarmArea,
+              });
+
+              showToast("บันทึกข้อมูลพื้นที่เรียบร้อย");
+            }
+          } catch (error) {
+            console.error("Error managing farm area:", error);
+            showToast("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง", "error");
+          } finally {
+            manageFarmAreaBtn.disabled = false;
+            manageFarmAreaBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+            </svg>
+            <span>จัดการพื้นที่แปลงเกษตร</span>
+          `;
+          }
+        };
+      }
+
+      // Component Initialization
+      async function initializeComponents(profile) {
         try {
-          const farmArea = await checkAndSetupFarmArea();
+          showLoading("กำลังโหลดข้อมูล...");
+          state.profile = profile;
+          initializeProfile(profile);
+
+          const initializationSteps = [
+            { name: "ตรวจสอบข้อมูลพื้นที่", promise: checkAndSetupFarmArea },
+            { name: "โหลดข้อมูลฟาร์ม", promise: loadFarmData },
+            { name: "โหลดข้อมูลเซ็นเซอร์", promise: loadFarmDataFromCSV },
+          ];
+
+          const results = {};
+          for (const step of initializationSteps) {
+            document.querySelector("#loadingOverlay p").textContent = step.name;
+            results[step.name] = await withTimeout(
+              step.promise(),
+              TIMEOUT_DURATION
+            );
+          }
+
+          const farmArea = results["ตรวจสอบข้อมูลพื้นที่"];
+          const farmData = results["โหลดข้อมูลฟาร์ม"];
+          const farmSensorData = results["โหลดข้อมูลเซ็นเซอร์"];
+
           state.farmArea = farmArea;
 
-          const [farmData, farmSensorData] = await Promise.all([
-            loadFarmData(),
-            loadFarmDataFromCSV(),
-          ]);
-
-          const completeData = {
-            ...farmData,
-            farmArea,
-          };
-
-          // เรียกใช้งานฟังก์ชัน
+          // Initialize UI components
           fetchWeatherData();
-
-          // อัพเดทข้อมูลทุก 5 นาที
-          setInterval(fetchWeatherData, 5 * 60 * 1000);
-
-          updateFarmSummary(completeData);
-          updateActivities(completeData.activities);
+          updateFarmSummary({ ...farmData, farmArea });
+          updateActivities(farmData.activities || []);
           updateFarmSensorData(farmSensorData);
 
-          // Set up manage farm area button
-          const manageFarmAreaBtn =
-            document.getElementById("manageFarmAreaBtn");
-          manageFarmAreaBtn.onclick = async () => {
+          // Set up refresh intervals
+          setInterval(fetchWeatherData, REFRESH_INTERVAL);
+          setInterval(async () => {
             try {
-              manageFarmAreaBtn.disabled = true;
-              manageFarmAreaBtn.innerHTML = `
-                <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                <span>กำลังโหลดแผนที่...</span>
-              `;
-
-              await waitForLongdoMap();
-              const newFarmArea = await createFarmAreaSelector();
-
-              if (newFarmArea) {
-                manageFarmAreaBtn.innerHTML = `
-                  <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                  <span>กำลังบันทึก...</span>
-                `;
-
-                localStorage.setItem("farmArea", JSON.stringify(newFarmArea));
-                state.farmArea = newFarmArea;
-                await axios.put(
-                  `${API_BASE_URL}/farms/${state.userId}`,
-                  newFarmArea
-                );
-
-                const updatedFarmData = await loadFarmData();
-                updateFarmSummary({
-                  ...updatedFarmData,
-                  farmArea: newFarmArea,
-                });
-
-                showToast("บันทึกข้อมูลพื้นที่เรียบร้อย");
-              }
+              const newSensorData = await loadFarmDataFromCSV();
+              updateFarmSensorData(newSensorData);
             } catch (error) {
-              console.error("Error managing farm area:", error);
-              showToast("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง", "error");
-            } finally {
-              manageFarmAreaBtn.disabled = false;
-              manageFarmAreaBtn.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-                </svg>
-                <span>จัดการพื้นที่แปลงเกษตร</span>
-              `;
+              console.error("Error refreshing sensor data:", error);
             }
-          };
+          }, REFRESH_INTERVAL);
+
+          setupFarmAreaButton();
         } catch (error) {
           console.error("Error initializing components:", error);
           showToast(
             "เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง",
+            "error"
+          );
+          throw error;
+        } finally {
+          hideLoading();
+        }
+      }
+
+      // Main Application Flow
+      async function main() {
+        try {
+          showLoading("กำลังเริ่มต้นระบบ...");
+
+          // Wait for LIFF SDK and initialize
+          const liff = await waitForLiff();
+          await withTimeout(liff.init({ liffId: LIFF_ID }), TIMEOUT_DURATION);
+
+          if (!liff.isLoggedIn()) {
+            liff.login();
+            return;
+          }
+
+          // Load required scripts
+          await loadAllScripts();
+
+          // Get user profile and initialize
+          const profile = await withTimeout(
+            liff.getProfile(),
+            TIMEOUT_DURATION
+          );
+          state.userId = profile.userId;
+
+          await initializeComponents(profile);
+        } catch (error) {
+          console.error("Error in main:", error);
+          showToast(
+            "เกิดข้อผิดพลาดในการเริ่มต้นระบบ กรุณาลองใหม่อีกครั้ง",
             "error"
           );
         } finally {
@@ -319,131 +409,8 @@
         }
       }
 
-      const main = async () => {
-        try {
-          await liff.init({ liffId: "2006590878-7Q9VJB6o" });
-          if (liff.isLoggedIn()) {
-            const profile = await liff.getProfile();
-            userId = profile.userId;
-
-            // Initialize all components
-            await initializeComponents(profile);
-
-            // Set up auto-refresh for farm sensor data
-            setInterval(async () => {
-              const farmSensorData = await loadFarmDataFromCSV();
-              updateFarmSensorData(farmSensorData);
-            }, 5 * 60 * 1000);
-          } else {
-            liff.login();
-          }
-        } catch (error) {
-          console.error("Error in main:", error);
-        }
-
-        const TIMEOUT_DURATION = 30000; // 30 seconds timeout
-
-        // Utility function for timeout
-        const timeoutPromise = (ms) => {
-          return new Promise((_, reject) => {
-            setTimeout(() => reject(new Error("Operation timed out")), ms);
-          });
-        };
-
-        // Utility function to handle Promise with timeout
-        const withTimeout = (promise, ms) => {
-          return Promise.race([promise, timeoutPromise(ms)]);
-        };
-
-        const main = async () => {
-          try {
-            showLoading();
-
-            // Initialize LIFF with timeout
-            await withTimeout(
-              liff.init({ liffId: "2006590878-7Q9VJB6o" }),
-              TIMEOUT_DURATION
-            );
-
-            if (!liff.isLoggedIn()) {
-              liff.login();
-              return;
-            }
-
-            // Get user profile with timeout
-            const profile = await withTimeout(
-              liff.getProfile(),
-              TIMEOUT_DURATION
-            );
-            state.userId = profile.userId;
-
-            // Initialize components with progress tracking
-            const initializationSteps = [
-              { name: "ตรวจสอบข้อมูลพื้นที่", promise: checkAndSetupFarmArea },
-              { name: "โหลดข้อมูลฟาร์ม", promise: loadFarmData },
-              { name: "โหลดข้อมูลเซ็นเซอร์", promise: loadFarmDataFromCSV },
-            ];
-
-            const results = {};
-
-            for (const step of initializationSteps) {
-              try {
-                // Update loading message
-                document.querySelector("#loadingOverlay p").textContent =
-                  step.name;
-
-                // Execute step with timeout
-                results[step.name] = await withTimeout(
-                  step.promise(),
-                  TIMEOUT_DURATION
-                );
-              } catch (error) {
-                console.error(`Error in ${step.name}:`, error);
-                throw new Error(`${step.name} ล้มเหลว: ${error.message}`);
-              }
-            }
-
-            // Update components with loaded data
-            const farmArea = results["ตรวจสอบข้อมูลพื้นที่"];
-            const farmData = results["โหลดข้อมูลฟาร์ม"];
-            const farmSensorData = results["โหลดข้อมูลเซ็นเซอร์"];
-
-            state.farmArea = farmArea;
-
-            // Initialize UI components
-            initializeProfile(profile);
-            fetchWeatherData();
-            updateFarmSummary({ ...farmData, farmArea });
-            updateActivities(farmData.activities || []);
-            updateFarmSensorData(farmSensorData);
-
-            // Set up refresh intervals
-            setInterval(fetchWeatherData, 5 * 60 * 1000);
-            setInterval(async () => {
-              try {
-                const newSensorData = await loadFarmDataFromCSV();
-                updateFarmSensorData(newSensorData);
-              } catch (error) {
-                console.error("Error refreshing sensor data:", error);
-              }
-            }, 5 * 60 * 1000);
-
-            // Setup farm area management button
-            setupFarmAreaButton();
-          } catch (error) {
-            console.error("Initialization error:", error);
-            showToast(
-              `เกิดข้อผิดพลาด: ${error.message || "กรุณาลองใหม่อีกครั้ง"}`,
-              "error"
-            );
-          } finally {
-            hideLoading();
-          }
-        };
-
-      };
-
-      main();
+      // Start the application when DOM is ready
+      document.addEventListener("DOMContentLoaded", main);
     </script>
   </body>
 </html>
