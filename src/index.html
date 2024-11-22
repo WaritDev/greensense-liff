@@ -326,50 +326,193 @@
           await liff.init({ liffId: "2006590878-7Q9VJB6o" });
           if (liff.isLoggedIn()) {
             const profile = await liff.getProfile();
-            state.userId = profile.userId;
+            userId = profile.userId;
 
             // Initialize all components
             await initializeComponents(profile);
 
             // Set up auto-refresh for farm sensor data
             setInterval(async () => {
-              try {
-                const farmSensorData = await loadFarmDataFromCSV();
-                updateFarmSensorData(farmSensorData);
-              } catch (error) {
-                console.error("Error refreshing farm sensor data:", error);
-              }
-            }, 5 * 60 * 1000); // Refresh every 5 minutes
+              const farmSensorData = await loadFarmDataFromCSV();
+              updateFarmSensorData(farmSensorData);
+            }, 5 * 60 * 1000);
           } else {
-            // ถ้ายังไม่ได้ login ให้ redirect ไปหน้า login
             liff.login();
           }
         } catch (error) {
-          console.error("LIFF initialization failed:", error);
+          console.error("Error in main:", error);
+        }
+
+        const TIMEOUT_DURATION = 30000; // 30 seconds timeout
+
+        // Utility function for timeout
+        const timeoutPromise = (ms) => {
+          return new Promise((_, reject) => {
+            setTimeout(() => reject(new Error("Operation timed out")), ms);
+          });
+        };
+
+        // Utility function to handle Promise with timeout
+        const withTimeout = (promise, ms) => {
+          return Promise.race([promise, timeoutPromise(ms)]);
+        };
+
+        const main = async () => {
+          try {
+            showLoading();
+
+            // Initialize LIFF with timeout
+            await withTimeout(
+              liff.init({ liffId: "2006590878-7Q9VJB6o" }),
+              TIMEOUT_DURATION
+            );
+
+            if (!liff.isLoggedIn()) {
+              liff.login();
+              return;
+            }
+
+            // Get user profile with timeout
+            const profile = await withTimeout(
+              liff.getProfile(),
+              TIMEOUT_DURATION
+            );
+            state.userId = profile.userId;
+
+            // Initialize components with progress tracking
+            const initializationSteps = [
+              { name: "ตรวจสอบข้อมูลพื้นที่", promise: checkAndSetupFarmArea },
+              { name: "โหลดข้อมูลฟาร์ม", promise: loadFarmData },
+              { name: "โหลดข้อมูลเซ็นเซอร์", promise: loadFarmDataFromCSV },
+            ];
+
+            const results = {};
+
+            for (const step of initializationSteps) {
+              try {
+                // Update loading message
+                document.querySelector("#loadingOverlay p").textContent =
+                  step.name;
+
+                // Execute step with timeout
+                results[step.name] = await withTimeout(
+                  step.promise(),
+                  TIMEOUT_DURATION
+                );
+              } catch (error) {
+                console.error(`Error in ${step.name}:`, error);
+                throw new Error(`${step.name} ล้มเหลว: ${error.message}`);
+              }
+            }
+
+            // Update components with loaded data
+            const farmArea = results["ตรวจสอบข้อมูลพื้นที่"];
+            const farmData = results["โหลดข้อมูลฟาร์ม"];
+            const farmSensorData = results["โหลดข้อมูลเซ็นเซอร์"];
+
+            state.farmArea = farmArea;
+
+            // Initialize UI components
+            initializeProfile(profile);
+            fetchWeatherData();
+            updateFarmSummary({ ...farmData, farmArea });
+            updateActivities(farmData.activities || []);
+            updateFarmSensorData(farmSensorData);
+
+            // Set up refresh intervals
+            setInterval(fetchWeatherData, 5 * 60 * 1000);
+            setInterval(async () => {
+              try {
+                const newSensorData = await loadFarmDataFromCSV();
+                updateFarmSensorData(newSensorData);
+              } catch (error) {
+                console.error("Error refreshing sensor data:", error);
+              }
+            }, 5 * 60 * 1000);
+
+            // Setup farm area management button
+            setupFarmAreaButton();
+          } catch (error) {
+            console.error("Initialization error:", error);
+            showToast(
+              `เกิดข้อผิดพลาด: ${error.message || "กรุณาลองใหม่อีกครั้ง"}`,
+              "error"
+            );
+          } finally {
+            hideLoading();
+          }
+        };
+
+        // Function to setup farm area management button
+        function setupFarmAreaButton() {
+          const manageFarmAreaBtn =
+            document.getElementById("manageFarmAreaBtn");
+          if (!manageFarmAreaBtn) return;
+
+          manageFarmAreaBtn.onclick = async () => {
+            try {
+              manageFarmAreaBtn.disabled = true;
+              manageFarmAreaBtn.innerHTML = `
+        <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+        <span>กำลังโหลดแผนที่...</span>
+      `;
+
+              await waitForLongdoMap();
+              const newFarmArea = await createFarmAreaSelector();
+
+              if (newFarmArea) {
+                manageFarmAreaBtn.innerHTML = `
+          <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+          <span>กำลังบันทึก...</span>
+        `;
+
+                localStorage.setItem("farmArea", JSON.stringify(newFarmArea));
+                state.farmArea = newFarmArea;
+
+                await axios.put(
+                  `${API_BASE_URL}/farms/${state.userId}`,
+                  newFarmArea
+                );
+                const updatedFarmData = await loadFarmData();
+
+                updateFarmSummary({
+                  ...updatedFarmData,
+                  farmArea: newFarmArea,
+                });
+
+                showToast("บันทึกข้อมูลพื้นที่เรียบร้อย");
+              }
+            } catch (error) {
+              console.error("Error managing farm area:", error);
+              showToast("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง", "error");
+            } finally {
+              manageFarmAreaBtn.disabled = false;
+              manageFarmAreaBtn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+        </svg>
+        <span>จัดการพื้นที่แปลงเกษตร</span>
+      `;
+            }
+          };
+        }
+
+        // Improved error handling
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+          console.error("Window Error:", { msg, url, lineNo, columnNo, error });
           showToast(
-            "เกิดข้อผิดพลาดในการเชื่อมต่อ LINE LIFF กรุณาลองใหม่อีกครั้ง",
+            "เกิดข้อผิดพลาดในการโหลดแอปพลิเคชัน กรุณารีเฟรชหน้าเว็บ",
             "error"
           );
           hideLoading();
-        }
-      };
+          return false;
+        };
 
-      // Error handling for script loading
-      window.onerror = function (msg, url, lineNo, columnNo, error) {
-        console.error("Window Error:", msg, url, lineNo, columnNo, error);
-        showToast(
-          "เกิดข้อผิดพลาดในการโหลดแอปพลิเคชัน กรุณารีเฟรชหน้าเว็บ",
-          "error"
-        );
-        hideLoading();
-        return false;
-      };
-
-      // Handle unhandled promise rejections
-      window.onunhandledrejection = function (event) {
-        console.error("Unhandled Promise Rejection:", event.reason);
-        showToast("เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่อีกครั้ง", "error");
-        hideLoading();
+        window.onunhandledrejection = function (event) {
+          console.error("Unhandled Promise Rejection:", event.reason);
+          showToast("เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่อีกครั้ง", "error");
+          hideLoading();
+        };
       };
 
       main();
