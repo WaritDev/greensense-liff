@@ -4,7 +4,7 @@ const sendMessage = async (message) => {
         throw new Error('message not found');
       }
       const response = await axios.post(
-        'https://2a3d-184-22-231-98.ngrok-free.app/send-message',
+        'https://7fc3-2001-fb1-bf-507b-783d-6cb0-d043-5cad.ngrok-free.app/send-message',
         {
           userId,
           message
