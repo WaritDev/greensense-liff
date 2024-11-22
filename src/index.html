@@ -109,7 +109,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
     <script src="./utils/constants.js"></script>
     <script>
-
       // Global state
       const state = {
         userId: null,
@@ -266,52 +265,50 @@
         const manageFarmAreaBtn = document.getElementById("manageFarmAreaBtn");
         manageFarmAreaBtn.onclick = async () => {
           try {
+            // แสดงสถานะกำลังโหลด
             manageFarmAreaBtn.disabled = true;
             manageFarmAreaBtn.innerHTML = `
-            <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-            <span>กำลังโหลดแผนที่...</span>
-          `;
+        <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+        <span>กำลังโหลดแผนที่...</span>
+      `;
 
-            await waitForLongdoMap();
+            // รอ mock loading 1 วินาที
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+
             const newFarmArea = await createFarmAreaSelector();
 
             if (newFarmArea) {
+              // แสดงสถานะกำลังบันทึก
               manageFarmAreaBtn.innerHTML = `
-              <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-              <span>กำลังบันทึก...</span>
-            `;
+          <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+          <span>กำลังบันทึก...</span>
+        `;
 
+              // Mock การบันทึกข้อมูล
+              await new Promise((resolve) => setTimeout(resolve, 800));
+
+              // Mock การอัพเดทข้อมูลใน localStorage
               localStorage.setItem("farmArea", JSON.stringify(newFarmArea));
-              state.farmArea = newFarmArea;
-              await axios.put(
-                `${API_BASE_URL}/farms/${state.userId}`,
-                newFarmArea
-              );
 
-              const updatedFarmData = await loadFarmData();
-              updateFarmSummary({
-                ...updatedFarmData,
-                farmArea: newFarmArea,
-              });
-
+              // Mock แสดง toast สำเร็จ
               showToast("บันทึกข้อมูลพื้นที่เรียบร้อย");
             }
           } catch (error) {
             console.error("Error managing farm area:", error);
             showToast("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง", "error");
           } finally {
+            // คืนค่าปุ่มกลับสู่สถานะปกติ
             manageFarmAreaBtn.disabled = false;
             manageFarmAreaBtn.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-            </svg>
-            <span>จัดการพื้นที่แปลงเกษตร</span>
-          `;
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+        </svg>
+        <span>จัดการพื้นที่แปลงเกษตร</span>
+      `;
           }
         };
       }
 
-      // Component Initialization
       async function initializeComponents(profile) {
         try {
           showLoading("กำลังโหลดข้อมูล...");
@@ -392,7 +389,7 @@
             TIMEOUT_DURATION
           );
           state.userId = profile.userId;
-          userId = profile.userId
+          userId = profile.userId;
 
           await initializeComponents(profile);
         } catch (error) {
