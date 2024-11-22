@@ -54,6 +54,10 @@
 
       <div class="space-y-6">
         <div
+          id="weatherCardComponent"
+          class="bg-white rounded-xl shadow-sm p-4"
+        ></div>
+        <div
           id="farmSummaryComponent"
           class="bg-white rounded-xl shadow-sm p-4"
         ></div>
@@ -121,6 +125,7 @@
           await loadScript("utils/constants.js");
           await loadScript("services/lineService.js");
           await loadScript("services/farmService.js");
+          await loadScript("components/Weather.js");
           await loadScript("components/PrivacyPolicy.js");
           await loadScript("components/FarmAreaSelector.js");
           await loadScript("components/Profile.js");
@@ -247,6 +252,12 @@
             farmArea,
           };
 
+          // เรียกใช้งานฟังก์ชัน
+          fetchWeatherData();
+
+          // อัพเดทข้อมูลทุก 5 นาที
+          setInterval(fetchWeatherData, 5 * 60 * 1000);
+
           updateFarmSummary(completeData);
           updateActivities(completeData.activities);
           updateFarmSensorData(farmSensorData);
@@ -315,22 +326,50 @@
           await liff.init({ liffId: "2006590878-7Q9VJB6o" });
           if (liff.isLoggedIn()) {
             const profile = await liff.getProfile();
-            userId = profile.userId;
+            state.userId = profile.userId;
 
             // Initialize all components
             await initializeComponents(profile);
 
             // Set up auto-refresh for farm sensor data
             setInterval(async () => {
-              const farmSensorData = await loadFarmDataFromCSV();
-              updateFarmSensorData(farmSensorData);
-            }, 5 * 60 * 1000);
+              try {
+                const farmSensorData = await loadFarmDataFromCSV();
+                updateFarmSensorData(farmSensorData);
+              } catch (error) {
+                console.error("Error refreshing farm sensor data:", error);
+              }
+            }, 5 * 60 * 1000); // Refresh every 5 minutes
           } else {
+            // ถ้ายังไม่ได้ login ให้ redirect ไปหน้า login
             liff.login();
           }
         } catch (error) {
-          console.error("Error in main:", error);
+          console.error("LIFF initialization failed:", error);
+          showToast(
+            "เกิดข้อผิดพลาดในการเชื่อมต่อ LINE LIFF กรุณาลองใหม่อีกครั้ง",
+            "error"
+          );
+          hideLoading();
         }
+      };
+
+      // Error handling for script loading
+      window.onerror = function (msg, url, lineNo, columnNo, error) {
+        console.error("Window Error:", msg, url, lineNo, columnNo, error);
+        showToast(
+          "เกิดข้อผิดพลาดในการโหลดแอปพลิเคชัน กรุณารีเฟรชหน้าเว็บ",
+          "error"
+        );
+        hideLoading();
+        return false;
+      };
+
+      // Handle unhandled promise rejections
+      window.onunhandledrejection = function (event) {
+        console.error("Unhandled Promise Rejection:", event.reason);
+        showToast("เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่อีกครั้ง", "error");
+        hideLoading();
       };
 
       main();
