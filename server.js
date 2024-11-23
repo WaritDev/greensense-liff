@@ -355,9 +355,6 @@ app.listen(port, async () => {
   console.log(`Express app listening at http://localhost:${port}`);
 });
 
-const fs = require('fs');
-const path = require('path');
-
 app.post('/api/save-user-log', (req, res) => {
   try {
     const { data } = req.body;
