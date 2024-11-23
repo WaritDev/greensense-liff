@@ -9,11 +9,34 @@
     <title>ระบบจัดการฟาร์ม</title>
     <script src="https://api.longdo.com/map/?key=278fc2decfa5dfb5eaacfce50d3d254f"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="styles/main.css" />
+    <!-- Prompt Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Tailwind Config for Prompt Font -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'prompt': ['Prompt', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+    <!-- React -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Babel -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <style>
       body {
         -webkit-tap-highlight-color: transparent;
@@ -36,7 +59,7 @@
       }
     </style>
   </head>
-  <body class="bg-gray-50">
+  <body class="bg-gray-50 font-prompt">
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
       <div class="flex flex-col items-center">
@@ -72,8 +95,13 @@
           id="farmSensorComponent"
           class="bg-white rounded-xl shadow-sm p-4"
         ></div>
+        <div id="root"></div>
       </div>
     </div>
+
+      
+    
+      
 
     <!-- Fixed Bottom Bar -->
     <div
@@ -108,7 +136,204 @@
       class="fixed bottom-24 left-4 right-4 z-50 pointer-events-none"
     ></div>
 
-    <!-- Scripts -->
+    <script type="text/babel">
+      const WaterSensor = () => {
+        const [sensorData, setSensorData] = React.useState(null);
+        const chartRef = React.useRef(null);
+        const chartInstance = React.useRef(null);
+        
+        // Function to parse CSV data from Google Sheets
+        const parseCSVData = async (url) => {
+          try {
+            const response = await fetch(url);
+            const text = await response.text();
+            
+            // แปลง HTML table เป็น Array
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'text/html');
+            const table = doc.querySelector('table');
+            
+            if (!table) throw new Error('Table not found');
+            
+            const rows = Array.from(table.querySelectorAll('tr'));
+            const data = rows.slice(1).map(row => { // slice(1) to skip header
+              const cells = Array.from(row.querySelectorAll('td'));
+              if (cells.length >= 4) {
+                return {
+                  timestamp: cells[0].textContent.trim(),
+                  distance: parseFloat(cells[1].textContent),
+                  water_level: parseFloat(cells[2].textContent),
+                  uid: cells[3].textContent.trim()
+                };
+              }
+              return null;
+            }).filter(item => item !== null);
+            
+            return data;
+          } catch (error) {
+            console.error('Error fetching data:', error);
+            return [];
+          }
+        };
+
+        const checkWaterLevel = (level) => {
+          if (level < 15) { // ตรวจสอบระดับน้ำต่ำกว่า 15 cm
+            // แสดง Toast notification
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-24 left-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50';
+            toast.innerHTML = `
+              <strong class="font-bold">แจ้งเตือน!</strong>
+              <span class="block sm:inline"> ระดับน้ำต่ำกว่า 15 cm (ปัจจุบัน: ${level} cm)</span>
+            `;
+            document.body.appendChild(toast);
+            
+            // ลบ toast หลังจาก 5 วินาที
+            setTimeout(() => {
+              toast.remove();
+            }, 5000);
+          }
+        };
+  
+        const updateChart = React.useCallback((data) => {
+          if (!chartRef.current) return;
+  
+          if (chartInstance.current) {
+            chartInstance.current.destroy();
+          }
+  
+          const ctx = chartRef.current.getContext('2d');
+          if (!ctx) return;
+  
+          Chart.defaults.font.family = 'Prompt';
+  
+          chartInstance.current = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: data.map(d => {
+                const date = new Date(d.timestamp);
+                return date.toLocaleTimeString('th-TH', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+              }),
+              datasets: [{
+                label: 'ระดับน้ำ (cm)',
+                data: data.map(d => d.water_level),
+                borderColor: '#2563eb',
+                tension: 0.1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                title: {
+                  display: true,
+                  text: 'กราฟแสดงระดับน้ำ'
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: 'ระดับน้ำ (cm)'
+                  }
+                }
+              }
+            }
+          });
+        }, []);
+  
+        const fetchData = React.useCallback(async () => {
+          try {
+            const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT9t98tgHHnnvTAcMoSSh2kxaCT3_p6dx_v7R1P1BneJoIj4pitMIEjbss2vZQBgmnFX1S6i6GaiKDO/pubhtml';
+            const data = await parseCSVData(url);
+            
+            if (data.length > 0) {
+              setSensorData(data);
+              // ตรวจสอบระดับน้ำล่าสุด
+              const latestReading = data[data.length - 1];
+              checkWaterLevel(latestReading.water_level);
+            }
+          } catch (error) {
+            console.error('Error fetching data:', error);
+          }
+        }, []);
+  
+        React.useEffect(() => {
+          fetchData();
+          // อัปเดตทุก 1 ชั่วโมง
+          const interval = setInterval(fetchData, 5000);
+          return () => clearInterval(interval);
+        }, [fetchData]);
+  
+        React.useEffect(() => {
+          if (sensorData) {
+            updateChart(sensorData);
+          }
+        }, [sensorData, updateChart]);
+  
+        if (!sensorData) {
+          return <div className="text-center p-4">กำลังโหลดข้อมูล...</div>;
+        }
+  
+        const latestData = sensorData[sensorData.length - 1];
+  
+        const getWaterLevelStatus = (level) => {
+          if (level >= 15) return { text: 'สูง', color: 'text-red-600' };
+          if (level >= 8) return { text: 'ปกติ', color: 'text-green-600' };
+          return { text: 'ต่ำ', color: 'text-yellow-600' };
+        };
+  
+        const status = getWaterLevelStatus(latestData.water_level);
+  
+        return (
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 max-w-4xl mx-auto">
+            <h2 className="text-xl font-semibold mb-4">ระบบติดตามระดับน้ำ</h2>
+            
+            <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <div className="text-sm font-medium text-gray-600">ระดับน้ำปัจจุบัน</div>
+                  <div className="text-2xl font-bold">{latestData.water_level} cm</div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-600">สถานะ</div>
+                  <div className={`text-lg font-semibold ${status.color}`}>
+                    {status.text}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-600">ระยะห่าง</div>
+                  <div className="text-lg font-semibold">{latestData.distance} cm</div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-600">อัพเดทล่าสุด</div>
+                  <div className="text-sm">
+                    {new Date(latestData.timestamp).toLocaleString('th-TH')}
+                  </div>
+                </div>
+              </div>
+            </div>
+  
+            <div style={{ height: '300px', width: '100%' }}>
+              <canvas ref={chartRef}></canvas>
+            </div>
+          </div>
+        );
+      };
+  
+      const App = () => (
+        <div className="container mx-auto p-4">
+          <WaterSensor />
+        </div>
+      );
+  
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+
     <!-- Scripts -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
