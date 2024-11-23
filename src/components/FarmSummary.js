@@ -8,7 +8,7 @@ const updateFarmSummary = async (userId) => {
     if (!farmData) {
       document.getElementById('farmSummaryComponent').innerHTML = `
         <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 h-full">
-          <p class="text-center text-gray-500">ไม่พบข้อมูลแปลงเกษตร กดจัดการพื้นที่แปลงเกษตรเพื่อเริ่มต้น</p>
+          <p class="text-center text-gray-500">ไม่พบข้อมูลแปลงเกษตร</p>
         </div>
       `;
       return;
