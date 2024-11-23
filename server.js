@@ -4,6 +4,7 @@ const cors = require("cors");
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs')
 const path = require('path');
+const FormData = require('form-data');
 
 ffmpeg.setFfmpegPath('C:/ffmpeg/bin/ffmpeg.exe');
 
@@ -75,7 +76,7 @@ const sendAudio = async (userId, audioUrl, duration) => {
   }
 }
 
-const textToSpeech = async ( message ) => {
+const textToSpeech = async (message) => {
   try {
     const headers = {
       "Content-Type": "application/json",
@@ -83,10 +84,10 @@ const textToSpeech = async ( message ) => {
     }
     const body = {
       text: message,
-      speaker:"1",
-      volume:1,
-      speed:1,
-      type_media:"m4a",
+      speaker: "85",
+      volume: 1,
+      speed: 1,
+      type_media: "m4a",
       save_file: "true",
       language: "th"
     }
@@ -96,46 +97,69 @@ const textToSpeech = async ( message ) => {
     const duration = response.data.point
     // console.log(response)
     console.log(response.data)
-    return { audioUrl, duration};
+    return { audioUrl, duration };
   } catch (error) {
     throw new Error(error)
   }
 }
 
-const speechToText = async (audioPath, fileName) => {
+const speechToText = async (audioPath) => {
   try {
-    const formData = new FormData();
-    formData.append('files', fs.createReadStream(audioPath), fileName);
+    if (!fs.existsSync(audioPath)) {
+      throw new Error("Audio file does not exist.");
+    }
 
-    const response = await axios.post(
-      VISAI_API_URL,formData,
-      {
-        headers: { 
-          "X-API-Key": VISAI_API_KEY,
-          ...formData.getHeaders()
+    let data = new FormData();
+    data.append('files', fs.createReadStream(audioPath));
+    let config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: VISAI_API_URL,
+      headers: {
+        'X-API-Key': VISAI_API_KEY,
+        ...data.getHeaders()
+      },
+      data: data
+    };
+    let transcript
+
+    await axios(config) 
+      .then((r) => {
+        console.log(JSON.stringify(r.data))
+        transcript = r.data?.data?.results?.[0]?.predictions?.[0]?.transcript;
+        // Handle cases where the transcript might be missing
+        if (transcript) {
+          console.log("Transcript:", transcript); // Logs the transcript
+        } else {
+          console.error("Transcript not found in the response.");
         }
-      }
-    );
+      })
+      .catch((error) => {
+        console.log("axios error");
+        
+        // Clean up
+        fs.unlinkSync(audioPath);
+        console.log(`File ${audioPath} deleted successfully.`);
+        throw new Error(error.message)
+      });
 
-    console.log("Transcription Result:", response.data.results.predictions.transcript);
-
-    // Delete the audio file after successful transcription
+    // Clean up
     fs.unlinkSync(audioPath);
     console.log(`File ${audioPath} deleted successfully.`);
-
-    return response.data.results.predictions.transcript
-
+    console.log(transcript)
+    return transcript;
   } catch (error) {
     console.error("Error with Speech-to-Text API:", error.message);
-    // Ensure the file is deleted even in case of an error
+
+    // Clean up on error
     if (fs.existsSync(audioPath)) {
       fs.unlinkSync(audioPath);
       console.log(`File ${audioPath} deleted after error.`);
     }
-    
+
     throw new Error(error);
   }
-}
+};
 
 const getAudioContent = async (messageId) => {
   try {
@@ -144,10 +168,10 @@ const getAudioContent = async (messageId) => {
       responseType: "stream"
     });
 
-    const fileName = `audio_${messageId}`
+    const fileName = `audio_${messageId}.mp4`
 
     // Define the path where the .mp4 file will be saved
-    const filePath = path.join(__dirname, `${fileName}.mp4`);
+    const filePath = path.join(__dirname, `${fileName}`);
 
     // Write the stream to a file
     const writer = fs.createWriteStream(filePath);
@@ -155,24 +179,24 @@ const getAudioContent = async (messageId) => {
 
     // Return a promise to ensure the file is completely written before proceeding
     return new Promise((resolve, reject) => {
-      writer.on('finish', () => {
+      writer.on("finish", () => {
         console.log(`File saved to ${filePath}`);
-        resolve(filePath); // Return the file path
+        resolve({ filePath, fileName });
       });
-      writer.on('error', (error) => {
-        console.error('Error saving file:', error);
+      writer.on("error", (error) => {
+        console.error("Error saving file:", error);
         reject(error);
       });
-    }, fileName);
+    });
   } catch (error) {
     console.error("Error fetching audio content:", error.response?.data || error.message);
     throw error;
   }
 };
 
-const callTyphoon = async (userId , userMessage) => {
+const callTyphoon = async (userId, userMessage) => {
   try {
-      if (!conversations[userId]) {
+    if (!conversations[userId]) {
       conversations[userId] = { history: [] };
     }
     const userConversation = conversations[userId].history;
@@ -181,7 +205,7 @@ const callTyphoon = async (userId , userMessage) => {
     if (userConversation.length === 0) {
       userConversation.push({
         role: "system",
-        content: "You are a helpful female farmer assistant. Answer only in Thai. Your replies should be concise and polite. Your name are น้องเขียว",
+        content: "You are a helpful female farmer assistant. Answer only in Thai. Your replies should be concise and polite. Your name are น้องกรีน",
       });
     }
 
@@ -254,47 +278,45 @@ app.post("/send-message", async (req, res) => {
 });
 
 app.post('/webhook', async (req, res) => {
-    const {events} = req.body
+  const { events } = req.body
 
-    if (!events || events.length === 0) {
-        res.json({
-            message: 'OK'
-        })
-        return false
-    }
+  if (!events || events.length === 0) {
+    res.json({
+      message: 'OK'
+    })
+    return false
+  }
 
   try {
     const lineEvent = events[0]
     const userId = lineEvent.source.userId
     let response;
-    
 
-     // Initialize the conversation context if it doesn't exist
-     if (!conversations[userId]) {
+
+    // Initialize the conversation context if it doesn't exist
+    if (!conversations[userId]) {
       conversations[userId] = {
         history: [],
         state: "idle",
       };
-      
+
       // ดึงข้อมูลโปรไฟล์ผู้ใช้
       const userProfile = await getUserProfile(userId);
       const userName = userProfile ? userProfile.displayName : "คุณ"; // ใช้ชื่อจากโปรไฟล์หรือค่าเริ่มต้น
-      
+
       // ประโยคแนะนำตัว
       const welcomeMessage = `สวัสดีค่ะ ${userName}! ฉันคือน้องเขียว ผู้ช่วยเกษตรกรของคุณค่ะ 😊\n` +
-                              `พิมพ์ "start-text" เพื่อเริ่มโหมดข้อความ หรือ "start-speech" เพื่อเริ่มโหมดเสียงได้เลยค่ะ!\n` +
-                              `หากต้องการเริ่มใหม่สามารถพิมพ์ "reset" ได้ตลอดเวลาค่ะ`;
-      
-      await sendMessage(userId, welcomeMessage);
+        `พิมพ์ "start-text" เพื่อเริ่มโหมดข้อความ หรือ "start-speech" เพื่อเริ่มโหมดเสียงได้เลยค่ะ!\n` +
+        `หากต้องการเริ่มใหม่สามารถพิมพ์ "reset" ได้ตลอดเวลาค่ะ`;
+
+      // await sendMessage(userId, welcomeMessage);
       console.log(lineEvent)
     }
-
     console.log(events)
     const userMessage = lineEvent.message.text || ''; // Handle text input
     const userState = conversations[userId].state;
 
-
-    if (userMessage === "start-text"){
+    if (userMessage === "start-text") {
       response = await sendMessage(userId, "เริ่มต้นโหมดข้อความ มีอะไรให้ช่วยไหมคะ?");
       conversations[userId] = { history: [], state: "text-mode" }; // Reset conversation
     } else if (userMessage === "start-speech") {
@@ -314,25 +336,23 @@ app.post('/webhook', async (req, res) => {
       // Save the message and reply to conversation history
       conversations[userId].history.push({ role: "user", content: userMessage });
       conversations[userId].history.push({ role: "assistant", content: typhoonReply });
-    } else if (userState === "speech-mode") { 
+    } else if (userState === "speech-mode") {
       // Handle speech-to-text
       let textMessage
       if (lineEvent.message.type === "audio") {
-        const {audioBuffer, fileName} = await getAudioContent(lineEvent.message.id);
-        console.log(audioBuffer)
-        textMessage = await speechToText(audioBuffer, fileName);
-        console.log(textMessage)
-        textMessage = "บอกสูตรไก่ย่าง 5 อย่าง"
+        const { filePath, fileName } = await getAudioContent(lineEvent.message.id);
+        console.log("filePath:", filePath, "fileName:", fileName);
+        textMessage = await speechToText(filePath);
+        console.log("Transcribed text:", textMessage);
       } else if (lineEvent.message.type === "text") {
         textMessage = userMessage
       } else {
         return;
-      } 
-
+      }
       const typhoonReply = await callTyphoon(userId, textMessage);
-      // const {audioUrl, duration} = await textToSpeech("หวัดดีฮาฟฟู้ว")
-      // console.log(audioUrl, duration)
-      // response = await sendAudio(userId, audioUrl, 30000)
+      const {audioUrl, duration} = await textToSpeech(typhoonReply)
+      console.log(audioUrl, duration)
+      response = await sendAudio(userId, audioUrl, 30000)
       response = await sendMessage(userId, typhoonReply);
 
       conversations[userId].history.push({ role: "user", content: textMessage });
@@ -342,7 +362,7 @@ app.post('/webhook', async (req, res) => {
     }
     res.json({
       message: "Send message successfully",
-      responseData: response.data
+      // responseData: response.data
     })
   } catch (error) {
     console.log("error");
@@ -351,7 +371,7 @@ app.post('/webhook', async (req, res) => {
     });
   }
 
-    console.log('events', events)
+  console.log('events', events)
 })
 app.listen(port, async () => {
   console.log(`Express app listening at http://localhost:${port}`);
@@ -361,15 +381,15 @@ app.post('/api/save-user-log', (req, res) => {
   try {
     const { data } = req.body;
     const filePath = path.join(__dirname, 'user_logs.csv');
-    
+
     // ถ้าไฟล์ยังไม่มี ให้สร้าง header
     if (!fs.existsSync(filePath)) {
       fs.writeFileSync(filePath, 'userId,timestamp\n');
     }
-    
+
     // เขียนข้อมูลต่อท้ายไฟล์
     fs.appendFileSync(filePath, data);
-    
+
     res.status(200).json({ message: 'บันทึกข้อมูลสำเร็จ' });
   } catch (error) {
     console.error('Error saving to CSV:', error);
