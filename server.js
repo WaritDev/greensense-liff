@@ -102,13 +102,13 @@ const textToSpeech = async ( message ) => {
   }
 }
 
-const speechToText = async (audioPath) => {
+const speechToText = async (audioPath, fileName) => {
   try {
     const formData = new FormData();
-    formData.append('files', fs.createReadStream(audioPath));
+    formData.append('files', fs.createReadStream(audioPath), fileName);
 
     const response = await axios.post(
-      VISAI_API_URL,
+      VISAI_API_URL,formData,
       {
         headers: { 
           "X-API-Key": VISAI_API_KEY,
@@ -144,8 +144,10 @@ const getAudioContent = async (messageId) => {
       responseType: "stream"
     });
 
+    const fileName = `audio_${messageId}`
+
     // Define the path where the .mp4 file will be saved
-    const filePath = path.join(__dirname, `audio_${messageId}.mp3`);
+    const filePath = path.join(__dirname, `${fileName}.mp4`);
 
     // Write the stream to a file
     const writer = fs.createWriteStream(filePath);
@@ -161,7 +163,7 @@ const getAudioContent = async (messageId) => {
         console.error('Error saving file:', error);
         reject(error);
       });
-    });
+    }, fileName);
   } catch (error) {
     console.error("Error fetching audio content:", error.response?.data || error.message);
     throw error;
@@ -316,9 +318,9 @@ app.post('/webhook', async (req, res) => {
       // Handle speech-to-text
       let textMessage
       if (lineEvent.message.type === "audio") {
-        const audioBuffer = await getAudioContent(lineEvent.message.id);
+        const {audioBuffer, fileName} = await getAudioContent(lineEvent.message.id);
         console.log(audioBuffer)
-        textMessage = await speechToText(audioBuffer);
+        textMessage = await speechToText(audioBuffer, fileName);
         console.log(textMessage)
         textMessage = "บอกสูตรไก่ย่าง 5 อย่าง"
       } else if (lineEvent.message.type === "text") {
