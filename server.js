@@ -145,7 +145,7 @@ const getAudioContent = async (messageId) => {
     });
 
     // Define the path where the .mp4 file will be saved
-    const filePath = path.join(__dirname, `audio_${messageId}.mp4`);
+    const filePath = path.join(__dirname, `audio_${messageId}.mp3`);
 
     // Write the stream to a file
     const writer = fs.createWriteStream(filePath);
