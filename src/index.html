@@ -416,21 +416,48 @@
           // Load required scripts
           await loadAllScripts();
 
-          // Get user profile and initialize
+          // Get user profile
           const profile = await withTimeout(
             liff.getProfile(),
             TIMEOUT_DURATION
           );
+
+          // เพิ่มข้อมูล Line เพิ่มเติม
+          const extendedProfile = {
+            ...profile,
+            accessToken: liff.getAccessToken(),
+            // เพิ่มข้อมูลอื่นๆ ที่ต้องการ
+          };
+
+          // บันทึกข้อมูลลง State
           state.userId = profile.userId;
           userId = profile.userId;
 
-          // บันทึกข้อมูล Profile ลง MongoDB
           try {
-            await saveUserProfile(profile);
-            console.log("บันทึกข้อมูล Profile สำเร็จ");
+            // บันทึกข้อมูลลง Firebase
+            const userData = await saveUserProfile(extendedProfile);
+            console.log("บันทึกข้อมูล Profile สำเร็จ:", userData);
+
+            // เก็บข้อมูลไว้ใช้ในแอพ
+            state.userData = userData;
+
+            // ตั้งค่าต่างๆ ตามข้อมูล user
+            if (userData.settings) {
+              applyUserSettings(userData.settings);
+            }
+
+            // ส่ง Analytics
+            logUserActivity("login_success", {
+              userId: profile.userId,
+              platform: "line",
+              deviceType: userData.deviceInfo.platform,
+            });
           } catch (error) {
             console.error("ไม่สามารถบันทึกข้อมูล Profile:", error);
-            // ไม่ต้อง throw error เพื่อให้แอพทำงานต่อได้
+            showToast(
+              "พบปัญหาในการบันทึกข้อมูล แต่สามารถใช้งานต่อได้",
+              "warning"
+            );
           }
 
           await initializeComponents(profile);
@@ -442,6 +469,19 @@
           );
         } finally {
           hideLoading();
+        }
+      }
+
+      // ฟังก์ชันสำหรับตั้งค่าต่างๆ ตามข้อมูล user
+      function applyUserSettings(settings) {
+        // ตั้งค่าธีม
+        if (settings.theme) {
+          document.documentElement.setAttribute("data-theme", settings.theme);
+        }
+
+        // ตั้งค่าภาษา
+        if (settings.language) {
+          document.documentElement.setAttribute("lang", settings.language);
         }
       }
 
