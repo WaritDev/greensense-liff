@@ -426,16 +426,33 @@
           const userData = {
             userId: profile.userId,
             displayName: profile.displayName,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           };
 
           // บันทึกข้อมูลผู้ใช้
           try {
-            const { saveUserLog } = await import('./api/userLog.js');
-            await saveUserLog(userData);
-            console.log('บันทึกข้อมูลผู้ใช้สำเร็จ');
-          } catch (logError) {
-            console.error('เกิดข้อผิดพลาดในการบันทึกข้อมูล:', logError);
+            // เตรียมข้อมูลสำหรับส่งไป API
+            const response = await fetch(`${API_BASE_URL}api/save-user-log`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                userId: profile.userId,
+                displayName: profile.displayName,
+                timestamp: new Date().toISOString(),
+              }),
+            });
+
+            if (!response.ok) {
+              throw new Error("ไม่สามารถบันทึกข้อมูลได้");
+            }
+
+            const result = await response.json();
+            console.log("บันทึกข้อมูลผู้ใช้สำเร็จ:", result);
+          } catch (error) {
+            console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
+            showToast("ไม่สามารถบันทึกข้อมูลผู้ใช้ได้", "error");
           }
 
           await initializeComponents(profile);
@@ -448,8 +465,7 @@
         } finally {
           hideLoading();
         }
-}
-
+      }
 
       // Start the application when DOM is ready
       document.addEventListener("DOMContentLoaded", main);
