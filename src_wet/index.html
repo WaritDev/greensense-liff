@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>โครงการเปียกสลับแห้ง</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      body {
+        font-family: 'Prompt', sans-serif;
+        background: linear-gradient(to bottom, #f0fdf4, #dcfce7);
+        min-height: 100vh;
+      }
+      .glass-effect {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      .hover-scale {
+        transition: transform 0.2s ease;
+      }
+      .hover-scale:hover {
+        transform: scale(1.02);
+      }
+      .fade-in {
+        animation: fadeIn 0.5s ease-in;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+      <!-- Header -->
+      <div class="text-center mb-12 fade-in">
+        <h1 class="text-3xl font-semibold text-gray-800 mb-3">โครงการเปียกสลับแห้ง</h1>
+        <p class="text-gray-600 text-lg">เพิ่มประสิทธิภาพการทำนาด้วยการจัดการน้ำที่ชาญฉลาด</p>
+      </div>
+
+      <!-- Main Buttons -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <button onclick="showJoinProject()" 
+          class="glass-effect hover-scale p-6 rounded-xl text-left group transition-all duration-300">
+          <div class="flex items-center space-x-4">
+            <div class="bg-blue-100 p-3 rounded-lg group-hover:bg-blue-200 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-xl font-medium text-gray-800 mb-1">เข้าร่วมโครงการ</h2>
+              <p class="text-gray-600">เริ่มต้นการทำนาแบบเปียกสลับแห้ง</p>
+            </div>
+          </div>
+        </button>
+
+        <button onclick="showProjectInfo()"
+          class="glass-effect hover-scale p-6 rounded-xl text-left group transition-all duration-300">
+          <div class="flex items-center space-x-4">
+            <div class="bg-green-100 p-3 rounded-lg group-hover:bg-green-200 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-xl font-medium text-gray-800 mb-1">ข้อมูลโครงการ</h2>
+              <p class="text-gray-600">ดูรายละเอียดและความคืบหน้า</p>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Join Project Section -->
+      <div id="joinProjectSection" class="hidden space-y-8 fade-in">
+        <!-- Video Introduction -->
+        <div class="glass-effect rounded-xl overflow-hidden shadow-lg">
+          <div class="p-6">
+            <h3 class="text-xl font-medium text-gray-800 mb-4">วิดีโอแนะนำโครงการ</h3>
+            <div class="aspect-video rounded-lg overflow-hidden">
+              <iframe class="w-full h-full" 
+                src="https://www.youtube.com/embed/zeKXDz4IGBI?si=RCjkDEcrjOyrlx-l" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen></iframe>
+            </div>
+          </div>
+        </div>
+
+        <!-- Benefits -->
+        <div class="glass-effect rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-medium text-gray-800 mb-6">ผลดีของการทำเกษตรแบบเปียกสลับแห้ง</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Water Saving -->
+            <div class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl hover-scale">
+              <div class="flex items-start space-x-3">
+                <div class="bg-blue-200 p-2 rounded-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="font-medium text-blue-800 mb-1">ลดการใช้น้ำ</h4>
+                  <p class="text-blue-600">ประหยัดน้ำได้ถึง 30%</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Greenhouse Gas Reduction -->
+            <div class="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl hover-scale">
+              <div class="flex items-start space-x-3">
+                <div class="bg-green-200 p-2 rounded-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="font-medium text-green-800 mb-1">ลดก๊าซเรือนกระจก</h4>
+                  <p class="text-green-600">ข้าวคาร์บอนต่ำ</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cost Reduction -->
+            <div class="p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl hover-scale">
+              <div class="flex items-start space-x-3">
+                <div class="bg-yellow-200 p-2 rounded-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="font-medium text-yellow-800 mb-1">ลดต้นทุน</h4>
+                  <p class="text-yellow-600">ประหยัดค่าน้ำและพลังงาน</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Soil Quality -->
+            <div class="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl hover-scale">
+              <div class="flex items-start space-x-3">
+                <div class="bg-purple-200 p-2 rounded-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="font-medium text-purple-800 mb-1">คุณภาพดินดีขึ้น</h4>
+                  <p class="text-purple-600">ออกซิเจนหมุนเวียนดี</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Area Selection -->
+        <div class="glass-effect rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-medium text-gray-800 mb-6">เลือกพื้นที่เข้าร่วมโครงการ</h3>
+          <div class="space-y-4">
+            <!-- Area 1 -->
+            <label class="block hover-scale cursor-pointer">
+              <div class="p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-all duration-300">
+                <div class="flex items-start space-x-4">
+                  <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600 mt-1 rounded">
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                      <h4 class="font-medium text-gray-800">แปลง B1</h4>
+                      <span class="text-sm bg-blue-100 text-blue-600 px-3 py-1 rounded-full">4 ไร่</span>
+                    </div>
+                    <div class="mt-2 space-y-1">
+                      <p class="text-sm text-gray-600 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        </svg>
+                        13.756331, 100.501765
+                      </p>
+                      <p class="text-sm text-gray-600 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        ข้าวหอมมะลิ 105
+                      </p>
+                      <p class="text-sm text-gray-600 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0                           00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        1 ส.ค. 2024 - 1 ธ.ค. 2024
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </label>
+
+            <!-- Area 2 -->
+            <label class="block hover-scale cursor-pointer">
+              <div class="p-4 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-all duration-300">
+                <div class="flex items-start space-x-4">
+                  <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600 mt-1 rounded">
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                      <h4 class="font-medium text-gray-800">แปลง B2</h4>
+                      <span class="text-sm bg-blue-100 text-blue-600 px-3 py-1 rounded-full">6 ไร่</span>
+                    </div>
+                    <div class="mt-2 space-y-1">
+                      <p class="text-sm text-gray-600 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        </svg>
+                        13.756445, 100.501890
+                      </p>
+                      <p class="text-sm text-gray-600 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        ข้าวเหนียว กข6
+                      </p>
+                      <p class="text-sm text-gray-600 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        15 ส.ค. 2024 - 15 ธ.ค. 2024
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Equipment Order -->
+        <div class="glass-effect rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-medium text-gray-800 mb-6">สั่งซื้ออุปกรณ์</h3>
+          <div class="space-y-6">
+            <!-- Water Level Sensor -->
+            <div class="space-y-4">
+              <h4 class="font-medium text-gray-700">เซนเซอร์วัดระดับน้ำ</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Battery Sensor -->
+                <div class="p-4 border rounded-xl">
+                  <div class="flex justify-between items-center mb-3">
+                    <span class="text-gray-800">แบบแบตเตอรี่</span>
+                    <span class="text-green-600 font-medium">฿1,500</span>
+                  </div>
+                  <div class="flex items-center justify-end space-x-3">
+                    <button class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200">-</button>
+                    <span class="w-8 text-center">0</span>
+                    <button class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200">+</button>
+                  </div>
+                </div>
+                <!-- Solar Cell Sensor -->
+                <div class="p-4 border rounded-xl">
+                  <div class="flex justify-between items-center mb-3">
+                    <span class="text-gray-800">แบบโซลาร์เซลล์</span>
+                    <span class="text-green-600 font-medium">฿2,500</span>
+                  </div>
+                  <div class="flex items-center justify-end space-x-3">
+                    <button class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200">-</button>
+                    <span class="w-8 text-center">0</span>
+                    <button class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- WiFi Board -->
+            <div class="p-4 border rounded-xl">
+              <div class="flex justify-between items-center mb-3">
+                <span class="text-gray-800">บอร์ดกระจายสัญญาณ WiFi</span>
+                <span class="text-green-600 font-medium">฿3,500</span>
+              </div>
+              <div class="flex items-center justify-end space-x-3">
+                <button class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200">-</button>
+                <span class="w-8 text-center">0</span>
+                <button class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200">+</button>
+              </div>
+            </div>
+
+            <!-- PVC Pipe -->
+            <div class="p-4 border rounded-xl">
+              <div class="flex justify-between items-center mb-3">
+                <span class="text-gray-800">ท่อ PVC สั่งทำ</span>
+                <span class="text-green-600 font-medium">฿500/เมตร</span>
+              </div>
+              <div class="flex items-center justify-end space-x-3">
+                <button class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200">-</button>
+                <span class="w-8 text-center">0</span>
+                <button class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project Info Section -->
+      <div id="projectInfoSection" class="hidden space-y-8 fade-in">
+        <!-- Wet-Dry Schedule -->
+        <div class="glass-effect rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-medium text-gray-800 mb-6">ตารางช่วงวันแห้งและเปียก</h3>
+          <div class="overflow-x-auto">
+            <table class="min-w-full">
+              <thead>
+                <tr class="bg-gray-50">
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ช่วงเวลา</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">สถานะ</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ระดับน้ำ</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr>
+                  <td class="px-6 py-4">1-7 ส.ค. 2024</td>
+                  <td class="px-6 py-4"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">เปียก</span></td>
+                  <td class="px-6 py-4">15-20 ซม.</td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-4">8-14 ส.ค. 2024</td>
+                  <td class="px-6 py-4"><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">แห้ง</span></td>
+                  <td class="px-6 py-4">0-5 ซม.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Current Water Level -->
+        <div class="glass-effect rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-medium text-gray-800 mb-6">ระดับน้ำปัจจุบัน</h3>
+          <div class="space-y-4">
+            <!-- Plot 1 -->
+            <div class="p-4 border rounded-xl">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h4 class="font-medium text-gray-800">แปลง B1</h4>
+                  <p class="text-sm text-gray-600">13.756331, 100.501765</p>
+                </div>
+                <div class="text-right">
+                  <span class="text-2xl font-medium text-blue-600">15 ซม.</span>
+                  <p class="text-sm text-gray-600">อัพเดทล่าสุด: 5 นาทีที่แล้ว</p>
+                </div>
+              </div>
+              <div class="h-2 bg-gray-200 rounded-full">
+                <div class="h-2 bg-blue-500 rounded-full" style="width: 75%"></div>
+              </div>
+            </div>
+
+            <!-- Plot 2 -->
+            <div class="p-4 border rounded-xl">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h4 class="font-medium text-gray-800">แปลง B2</h4>
+                  <p class="text-sm text-gray-600">13.756445, 100.501890</p>
+                </div>
+                <div class="text-right">
+                  <span class="text-2xl font-medium text-blue-600">12 ซม.</span>
+                  <p class="text-sm text-gray-600">อัพเดทล่าสุด: 2 นาทีที่แล้ว</p>
+                </div>
+              </div>
+              <div class="h-2 bg-gray-200 rounded-full">
+                <div class="h-2 bg-blue-500 rounded-full" style="width: 60%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historical Water Level Graph -->
+        <div class="glass-effect rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-medium text-gray-800 mb-6">กราฟระดับน้ำย้อนหลัง</h3>
+          <div class="space-y-8">
+            <!-- Plot 1 Graph -->
+            <div>
+              <h4 class="font-medium text-gray-800 mb-4">แปลง B1</h4>
+              <canvas id="plot1Chart" class="w-full"></canvas>
+            </div>
+
+            <!-- Plot 2 Graph -->
+            <div>
+              <h4 class="font-medium text-gray-800 mb-4">แปลง B2</h4>
+              <canvas id="plot2Chart" class="w-full"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Toggle sections
+      function showJoinProject() {
+        document.getElementById('joinProjectSection').classList.remove('hidden');
+        document.getElementById('projectInfoSection').classList.add('hidden');
+      }
+
+      function showProjectInfo() {
+        document.getElementById('projectInfoSection').classList.remove('hidden');
+        document.getElementById('joinProjectSection').classList.add('hidden');
+      }
+
+      // Initialize charts
+      const chartOptions = {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 20,
+            title: {
+              display: true,
+              text: 'ระดับน้ำ (ซม.)'
+            }
+          }
+        }
+      };
+
+      const plot1Data = {
+        labels: ['1 ส.ค.', '2 ส.ค.', '3 ส.ค.', '4 ส.ค.', '5 ส.ค.'],
+        datasets: [{
+          label: 'ระดับน้ำ',
+          data: [15, 18, 12, 16, 15],
+          borderColor: 'rgb(59, 130, 246)',
+          tension: 0.1
+        }]
+      };
+
+      const plot2Data = {
+        labels: ['1 ส.ค.', '2 ส.ค.', '3 ส.ค.', '4 ส.ค.', '5 ส.ค.'],
+        datasets: [{
+          label: 'ระดับน้ำ',
+          data: [12, 14, 11, 13, 12],
+          borderColor: 'rgb(59, 130, 246)',
+          tension: 0.1
+        }]
+      };
+
+      window.onload = function() {
+        const plot1Ctx = document.getElementById('plot1Chart').getContext('2d');
+        const plot2Ctx = document.getElementById('plot2Chart').getContext('2d');
+
+        new Chart(plot1Ctx, {
+          type: 'line',
+          data: plot1Data,
+          options: chartOptions
+        });
+
+        new Chart(plot2Ctx, {
+          type: 'line',
+          data: plot2Data,
+          options: chartOptions
+        });
+
+        // Equipment quantity handlers
+        const quantityButtons = document.querySelectorAll('button');
+        quantityButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            const container = button.parentElement;
+            const quantitySpan = container.querySelector('span');
+            let quantity = parseInt(quantitySpan.textContent);
+            
+            if (button.textContent === '+') {
+              quantity++;
+            } else if (button.textContent === '-' && quantity > 0) {
+              quantity--;
+            }
+            
+            quantitySpan.textContent = quantity;
+          });
+        });
+      };
+    </script>
+  </body>
+</html>

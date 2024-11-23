@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>โครงการปรับหน้าดิน</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      body {
+        font-family: 'Prompt', sans-serif;
+        background: linear-gradient(to bottom, #f0fdf4, #dcfce7);
+        min-height: 100vh;
+      }
+      .glass-effect {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      .hover-scale {
+        transition: transform 0.2s ease;
+      }
+      .hover-scale:hover {
+        transform: scale(1.02);
+      }
+      .fade-in {
+        animation: fadeIn 0.5s ease-in;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+      <!-- Header -->
+      <div class="text-center mb-12 fade-in">
+        <h1 class="text-3xl font-semibold text-gray-800 mb-3">โครงการปรับหน้าดิน</h1>
+        <p class="text-gray-600 text-lg">เพิ่มประสิทธิภาพการทำนาด้วยเทคโนโลยีที่ทันสมัย</p>
+      </div>
+
+      <!-- Main Buttons -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <button onclick="showJoinProject()" 
+          class="glass-effect hover-scale px-8 py-6 rounded-xl text-lg font-medium text-green-700 shadow-lg
+          border-2 border-green-500 hover:bg-green-50 transition-all duration-300">
+          <div class="flex flex-col items-center space-y-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            <span>เข้าร่วมโครงการปรับหน้าดิน</span>
+          </div>
+        </button>
+        <button onclick="showProjectInfo()"
+          class="glass-effect hover-scale px-8 py-6 rounded-xl text-lg font-medium text-blue-700 shadow-lg
+          border-2 border-blue-500 hover:bg-blue-50 transition-all duration-300">
+          <div class="flex flex-col items-center space-y-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>ดูข้อมูลโครงการ</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Join Project Section -->
+      <div id="joinProjectSection" class="hidden space-y-8 fade-in">
+        <!-- Video Card -->
+        <div class="glass-effect rounded-xl shadow-lg overflow-hidden">
+          <div class="aspect-video">
+            <iframe class="w-full h-full" 
+              src="https://www.youtube.com/embed/TtF9ZzYQWOw?si=APScimhxByLsprpK" 
+              frameborder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowfullscreen></iframe>
+          </div>
+        </div>
+
+        <!-- Benefits Cards -->
+        <div class="glass-effect rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-medium text-gray-800 mb-6">ผลดีของการเข้าร่วมโครงการ</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+              <div class="flex items-start space-x-4">
+                <div class="p-3 bg-green-500 rounded-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="font-medium text-green-800">ประหยัดต้นทุน</h4>
+                  <p class="text-green-600">ลดค่าใช้จ่ายได้ถึง 30-50%</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+              <div class="flex items-start space-x-4">
+                <div class="p-3 bg-blue-500 rounded-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="font-medium text-blue-800">เพิ่มประสิทธิภาพ</h4>
+                  <p class="text-blue-600">ผลผลิตเพิ่มขึ้น 20-30%</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl border border-yellow-200">
+              <div class="flex items-start space-x-4">
+                <div class="p-3 bg-yellow-500 rounded-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="font-medium text-yellow-800">สนับสนุนการเงิน</h4>
+                  <p class="text-yellow-600">โครงการ "คนละครึ่ง"</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+              <div class="flex items-start space-x-4">
+                <div class="p-3 bg-purple-500 rounded-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="font-medium text-purple-800">รับประกันผล</h4>
+                  <p class="text-purple-600">รับประกันคุณภาพ 1 ปี</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Method Selection -->
+        <div class="glass-effect rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-medium text-gray-800 mb-6">เลือกวิธีการปรับหน้าดิน</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button class="hover-scale p-6 rounded-xl border-2 border-gray-200 hover:border-gray-300 transition-all duration-300">
+              <div class="flex flex-col items-center space-y-4">
+                <div class="text-center">
+                  <h4 class="font-medium text-gray-800">วิธีภูมิปัญญา</h4>
+                  <p class="text-sm text-gray-600">กล่องลูกเทือก</p>
+                </div>
+              </div>
+            </button>
+
+            <button onclick="showLaserMethod()" 
+              class="hover-scale p-6 rounded-xl border-2 border-green-500 bg-green-50 hover:bg-green-100 transition-all duration-300">
+              <div class="flex flex-col items-center space-y-4">
+                <div class="text-center">
+                  <h4 class="font-medium text-green-800">วิธีเลเซอร์</h4>
+                  <p class="text-sm text-green-600">เทคโนโลยีทันสมัย</p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Laser Method Section -->
+      <div id="laserMethodSection" class="hidden space-y-8 fade-in">
+        <!-- Project Selection -->
+        <div class="glass-effect rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-medium text-gray-800 mb-6">เลือกโครงการ</h3>
+          <div class="space-y-4">
+            <label class="block hover-scale p-4 rounded-xl border-2 border-gray-200 hover:border-green-300 transition-all duration-300">
+              <div class="flex items-center space-x-4">
+                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded">
+                <div>
+                  <h4 class="font-medium text-gray-800">โครงการคนละครึ่ง</h4>
+                  <p class="text-sm text-gray-600">ลดค่าใช้จ่าย 50%</p>
+                </div>
+              </div>
+            </label>
+
+            <label class="block hover-scale p-4 rounded-xl border-2 border-gray-200 hover:border-green-300 transition-all duration-300">
+              <div class="flex items-center space-x-4">
+                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded">
+                <div>
+                  <h4 class="font-medium text-gray-800">ผ่อนจ่ายกับ ธ.ก.ส.</h4>
+                  <p class="text-sm text-gray-600">4 งวด ไม่มีดอกเบี้ย</p>
+                </div>
+            </div>
+          </label>
+        </div>
+        <button onclick="showCostCalculation()" 
+          class="mt-6 w-full bg-gradient-to-r from-green-600 to-green-500 text-white px-6 py-3 rounded-xl
+          font-medium hover:from-green-700 hover:to-green-600 transition-all duration-300 shadow-lg">
+          ยืนยันการเลือก
+        </button>
+      </div>
+
+      <!-- Cost Calculation -->
+      <div id="costCalculationSection" class="hidden space-y-8 fade-in">
+        <div class="glass-effect rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-medium text-gray-800 mb-6">ค่าใช้จ่ายโดยประมาณ</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+              <h4 class="font-medium text-gray-800 mb-2">ราคาเริ่มต้น</h4>
+              <p class="text-2xl font-semibold text-gray-900">2,000 ฿</p>
+              <p class="text-sm text-gray-600">ต่อไร่</p>
+            </div>
+            <div class="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+              <h4 class="font-medium text-green-800 mb-2">หลังร่วมโครงการ</h4>
+              <p class="text-2xl font-semibold text-green-700">1,000 ฿</p>
+              <p class="text-sm text-green-600">ต่อไร่</p>
+            </div>
+            <div class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+              <h4 class="font-medium text-blue-800 mb-2">ผ่อนจ่าย</h4>
+              <p class="text-2xl font-semibold text-blue-700">250 ฿</p>
+              <p class="text-sm text-blue-600">ต่อเดือน (4 งวด)</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Area Selection -->
+        <div class="glass-effect rounded-xl p-6 shadow-lg">
+          <h3 class="text-xl font-medium text-gray-800 mb-6">เลือกพื้นที่ทำการเกษตร</h3>
+          <div class="space-y-4">
+            <!-- Area 1 -->
+            <label class="block hover-scale">
+              <div class="p-4 rounded-xl border-2 border-gray-200 hover:border-green-300 transition-all duration-300">
+                <div class="flex items-start space-x-4">
+                  <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 mt-1 rounded">
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                      <h4 class="font-medium text-gray-800">แปลง A1</h4>
+                      <span class="text-sm bg-green-100 text-green-600 px-3 py-1 rounded-full">5 ไร่</span>
+                    </div>
+                    <div class="mt-2 space-y-1">
+                      <p class="text-sm text-gray-600 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        </svg>
+                        13.756331, 100.501765
+                      </p>
+                      <p class="text-sm text-gray-600 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        ข้าวหอมมะลิ 105
+                      </p>
+                      <p class="text-sm text-gray-600 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        1 ส.ค. 2024 - 1 ธ.ค. 2024
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </label>
+
+            <!-- Area 2 -->
+            <label class="block hover-scale">
+              <div class="p-4 rounded-xl border-2 border-gray-200 hover:border-green-300 transition-all duration-300">
+                <div class="flex items-start space-x-4">
+                  <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 mt-1 rounded">
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                      <h4 class="font-medium text-gray-800">แปลง A2</h4>
+                      <span class="text-sm bg-green-100 text-green-600 px-3 py-1 rounded-full">3 ไร่</span>
+                    </div>
+                    <div class="mt-2 space-y-1">
+                      <p class="text-sm text-gray-600 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        </svg>
+                        13.756331, 100.501765
+                      </p>
+                      <p class="text-sm text-gray-600 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        ข้าวเหนียว กข6
+                      </p>
+                      <p class="text-sm text-gray-600 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        15 ส.ค. 2024 - 15 ธ.ค. 2024
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </label>
+          </div>
+          <button class="mt-6 w-full bg-gradient-to-r from-green-600 to-green-500 text-white px-6 py-3 rounded-xl
+            font-medium hover:from-green-700 hover:to-green-600 transition-all duration-300 shadow-lg">
+            ยืนยันการเลือกพื้นที่
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Project Info Section -->
+    <div id="projectInfoSection" class="hidden space-y-8 fade-in">
+      <!-- Selected Projects -->
+      <div class="glass-effect rounded-xl p-6 shadow-lg">
+        <h3 class="text-xl font-medium text-gray-800 mb-6">โครงการที่เลือก</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+            <h4 class="font-medium text-green-800 mb-2">โครงการคนละครึ่ง</h4>
+            <p class="text-green-600">ลดค่าใช้จ่าย 50%</p>
+            <p class="text-sm text-green-500 mt-2">สิ้นสุดโครงการ: 31 ธ.ค. 2024</p>
+          </div>
+          <div class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+            <h4 class="font-medium text-blue-800 mb-2">ผ่อนจ่ายกับ ธ.ก.ส.</h4>
+            <p class="text-blue-600">4 งวด ไม่มีดอกเบี้ย</p>
+            <p class="text-sm text-blue-500 mt-2">ระยะเวลาผ่อน: 4 เดือน</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Schedule -->
+      <div class="glass-effect rounded-xl p-6 shadow-lg overflow-hidden">
+        <h3 class="text-xl font-medium text-gray-800 mb-6">ตารางการชำระเงิน</h3>
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead>
+              <tr class="bg-gray-50">
+                <th class="px-6 py-3 text-left text-sm font-medium text-gray-700">งวดที่</th>
+                <th class="px-6 py-3 text-left text-sm font-medium text-gray-700">วันที่</th>
+                <th class="px-6 py-3 text-left text-sm font-medium text-gray-700">จำนวนเงิน</th>
+                <th class="px-6 py-3 text-left text-sm font-medium text-gray-700">สถานะ</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 text-sm text-gray-700">1</td>
+                <td class="px-6 py-4 text-sm text-gray-700">1 ธ.ค. 2024</td>
+                <td class="px-6 py-4 text-sm text-gray-700">250 บาท</td>
+                <td class="px-6 py-4">
+                  <span class="px-3 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded-full">
+                    รอชำระ
+                  </span>
+                </td>
+              </tr>
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 text-sm text-gray-700">2</td>
+                <td class="px-6 py-4 text-sm text-gray-700">1 ม.ค. 2025</td>
+                <td class="px-6 py-4 text-sm text-gray-700">250 บาท</td>
+                <td class="px-6 py-4">
+                  <span class="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full">
+                    ยังไม่ถึงกำหนด
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showJoinProject() {
+      document.getElementById('joinProjectSection').classList.remove('hidden');
+      document.getElementById('projectInfoSection').classList.add('hidden');
+      document.getElementById('laserMethodSection').classList.add('hidden');
+    }
+
+    function showProjectInfo() {
+        document.getElementById('projectInfoSection').classList.remove('hidden');
+        document.getElementById('joinProjectSection').classList.add('hidden');
+        document.getElementById('laserMethodSection').classList.add('hidden');
+      }
+
+      function showLaserMethod() {
+        document.getElementById('laserMethodSection').classList.remove('hidden');
+        document.getElementById('costCalculationSection').classList.add('hidden');
+      }
+
+      function showCostCalculation() {
+        document.getElementById('costCalculationSection').classList.remove('hidden');
+      }
+
+      // Add smooth scrolling
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault();
+          document.querySelector(this.getAttribute('href')).scrollIntoView({
+            behavior: 'smooth'
+          });
+        });
+      });
+
+      // Add hover effects
+      const hoverCards = document.querySelectorAll('.hover-scale');
+      hoverCards.forEach(card => {
+        card.addEventListener('mouseover', function() {
+          this.style.transform = 'scale(1.02)';
+          this.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
+        });
+        
+        card.addEventListener('mouseout', function() {
+          this.style.transform = 'scale(1)';
+          this.style.boxShadow = '';
+        });
+      });
+
+      // Add fade-in animation on scroll
+      const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.1
+      };
+
+      const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('fade-in');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, observerOptions);
+
+      document.querySelectorAll('.glass-effect').forEach(el => {
+        observer.observe(el);
+      });
+
+      // Form validation
+      function validateForm(formId) {
+        const form = document.getElementById(formId);
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+
+        requiredFields.forEach(field => {
+          if (!field.value) {
+            isValid = false;
+            field.classList.add('border-red-500');
+            
+            // Add error message
+            const errorMessage = document.createElement('p');
+            errorMessage.className = 'text-red-500 text-sm mt-1';
+            errorMessage.textContent = 'กรุณากรอกข้อมูลในช่องนี้';
+            
+            if (!field.nextElementSibling?.classList.contains('text-red-500')) {
+              field.parentNode.insertBefore(errorMessage, field.nextSibling);
+            }
+          } else {
+            field.classList.remove('border-red-500');
+            if (field.nextElementSibling?.classList.contains('text-red-500')) {
+              field.nextElementSibling.remove();
+            }
+          }
+        });
+
+        return isValid;
+      }
+
+      // Add loading states to buttons
+      function setLoading(button, isLoading) {
+        if (isLoading) {
+          button.disabled = true;
+          button.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            กำลังดำเนินการ...
+          `;
+        } else {
+          button.disabled = false;
+          button.innerHTML = button.getAttribute('data-original-text');
+        }
+      }
+
+      // Initialize tooltips
+      const tooltips = document.querySelectorAll('[data-tooltip]');
+      tooltips.forEach(tooltip => {
+        tooltip.addEventListener('mouseenter', e => {
+          const tooltipText = document.createElement('div');
+          tooltipText.className = 'absolute z-10 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg';
+          tooltipText.textContent = e.target.getAttribute('data-tooltip');
+          tooltipText.style.bottom = '100%';
+          tooltipText.style.left = '50%';
+          tooltipText.style.transform = 'translateX(-50%)';
+          e.target.appendChild(tooltipText);
+        });
+
+        tooltip.addEventListener('mouseleave', e => {
+          const tooltipText = e.target.querySelector('div');
+          if (tooltipText) {
+            tooltipText.remove();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
