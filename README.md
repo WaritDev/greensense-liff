@@ -83,10 +83,10 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## 👥 Team
 
-- Project Manager / System Analyst: [Anusit Srikirin] @anusit47
-- Fullstack-developer: [Warit Lekmuenwai] @WaritDev
-- AI/Backend-developer: [Pachara Prompang] @plenglnw1
-- BI/BA Analyst: [Pipatpol Wijitchayanon] @higanbana-chan
+- Project Manager / System Analyst : [Anusit Srikirin] @anusit47
+- Fullstack-developer : [Warit Lekmuenwai] @WaritDev
+- AI/Backend-developer : [Pachara Prompang] @plenglnw1
+- Business Intelligence / Business Analyst : [Pipatpol Wijitchayanon] @higanbana-chan
 
 ## 📞 Contact
 
