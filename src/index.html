@@ -405,7 +405,6 @@
         try {
           showLoading("กำลังเริ่มต้นระบบ...");
 
-          // Wait for LIFF SDK and initialize
           const liff = await waitForLiff();
           await withTimeout(liff.init({ liffId: LIFF_ID }), TIMEOUT_DURATION);
 
@@ -414,16 +413,28 @@
             return;
           }
 
-          // Load required scripts
           await loadAllScripts();
 
-          // Get user profile and initialize
           const profile = await withTimeout(
             liff.getProfile(),
             TIMEOUT_DURATION
           );
           state.userId = profile.userId;
           userId = profile.userId;
+
+          // เพิ่มส่วนบันทึกข้อมูลลง CSV
+          const csvData = `${profile.userId},${new Date().toISOString()}\n`;
+
+          // ใช้ Fetch API เพื่อส่งข้อมูลไปยัง Backend
+          await fetch("/api/save-user-log", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              data: csvData,
+            }),
+          });
 
           await initializeComponents(profile);
         } catch (error) {

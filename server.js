@@ -354,3 +354,26 @@ app.post('/webhook', async (req, res) => {
 app.listen(port, async () => {
   console.log(`Express app listening at http://localhost:${port}`);
 });
+
+const fs = require('fs');
+const path = require('path');
+
+app.post('/api/save-user-log', (req, res) => {
+  try {
+    const { data } = req.body;
+    const filePath = path.join(__dirname, 'user_logs.csv');
+    
+    // ถ้าไฟล์ยังไม่มี ให้สร้าง header
+    if (!fs.existsSync(filePath)) {
+      fs.writeFileSync(filePath, 'userId,timestamp\n');
+    }
+    
+    // เขียนข้อมูลต่อท้ายไฟล์
+    fs.appendFileSync(filePath, data);
+    
+    res.status(200).json({ message: 'บันทึกข้อมูลสำเร็จ' });
+  } catch (error) {
+    console.error('Error saving to CSV:', error);
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล' });
+  }
+});
