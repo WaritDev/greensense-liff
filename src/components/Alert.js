@@ -144,6 +144,15 @@ window.weatherApp.getFarmLocation = async (userId) => {
       throw new Error("ไม่พบข้อมูลพิกัดฟาร์ม");
     }
 
+    if (!farmData) {
+        document.getElementById('farmSummaryComponent').innerHTML = `
+          <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 h-full">
+            <p class="text-center text-gray-500">ไม่พบข้อมูลแปลงเกษตร</p>
+          </div>
+        `;
+        return;
+      }
+
     return {
       latitude: farmData.centerLocation.latitude,
       longitude: farmData.centerLocation.longitude,
