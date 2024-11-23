@@ -3,8 +3,10 @@ const sendMessage = async (message) => {
       if (!message) {
         throw new Error('message not found');
       }
+      console.log(message);
+      console.log(userId);
       const response = await axios.post(
-        'https://7fc3-2001-fb1-bf-507b-783d-6cb0-d043-5cad.ngrok-free.app/send-message',
+        'https://fc73-2001-fb1-bf-507b-8495-5cf5-4582-d455.ngrok-free.app/send-message',
         {
           userId,
           message
