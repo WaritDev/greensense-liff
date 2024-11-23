@@ -400,11 +400,11 @@
         }
       }
 
-      // Main Application Flow
       async function main() {
         try {
           showLoading("กำลังเริ่มต้นระบบ...");
 
+          // Wait for LIFF SDK and initialize
           const liff = await waitForLiff();
           await withTimeout(liff.init({ liffId: LIFF_ID }), TIMEOUT_DURATION);
 
@@ -413,8 +413,10 @@
             return;
           }
 
+          // Load required scripts
           await loadAllScripts();
 
+          // Get user profile and initialize
           const profile = await withTimeout(
             liff.getProfile(),
             TIMEOUT_DURATION
@@ -422,37 +424,13 @@
           state.userId = profile.userId;
           userId = profile.userId;
 
-          // เตรียมข้อมูลสำหรับบันทึก
-          const userData = {
-            userId: profile.userId,
-            displayName: profile.displayName,
-            timestamp: new Date().toISOString(),
-          };
-
-          // บันทึกข้อมูลผู้ใช้
+          // บันทึกข้อมูล Profile ลง MongoDB
           try {
-            // เตรียมข้อมูลสำหรับส่งไป API
-            const response = await fetch(`${API_BASE_URL}`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                userId: profile.userId,
-                displayName: profile.displayName,
-                timestamp: new Date().toISOString(),
-              }),
-            });
-
-            if (!response.ok) {
-              throw new Error("ไม่สามารถบันทึกข้อมูลได้");
-            }
-
-            const result = await response.json();
-            console.log("บันทึกข้อมูลผู้ใช้สำเร็จ:", result);
+            await saveUserProfile(profile);
+            console.log("บันทึกข้อมูล Profile สำเร็จ");
           } catch (error) {
-            console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล:", error);
-            showToast("ไม่สามารถบันทึกข้อมูลผู้ใช้ได้", "error");
+            console.error("ไม่สามารถบันทึกข้อมูล Profile:", error);
+            // ไม่ต้อง throw error เพื่อให้แอพทำงานต่อได้
           }
 
           await initializeComponents(profile);
