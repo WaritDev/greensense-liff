@@ -58,6 +58,10 @@
           class="bg-white rounded-xl shadow-sm p-4"
         ></div>
         <div
+          id="alertCardComponent"
+          class="bg-white rounded-xl shadow-sm p-4"
+        ></div>
+        <div
           id="farmSummaryComponent"
           class="bg-white rounded-xl shadow-sm p-4"
         ></div>
@@ -113,24 +117,9 @@
     <!-- Import Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="./utils/firebase-config.js"></script>
 
     <script>
-      // Firebase configuration
-      const firebaseConfig = {
-        apiKey: "AIzaSyCYWx9i06SUNJubzqRmMz0a4eDGxIDHjuY",
-        authDomain: "greensense-7b257.firebaseapp.com",
-        databaseURL: "https://greensense-7b257-default-rtdb.asia-southeast1.firebasedatabase.app", // ต้องมีบรรทัดนี้
-        projectId: "greensense-7b257",
-        storageBucket: "greensense-7b257.firebasestorage.app",
-        messagingSenderId: "466569052274",
-        appId: "1:466569052274:web:77f6c889e784d6cc1402eb",
-        measurementId: "G-RJDZ5D1Y01",
-      };
-
-      // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
-      const database = firebase.database();
-
       // Global state
       const state = {
         userId: null,
@@ -234,29 +223,52 @@
         });
       }
 
-      // Farm Area Management
+      // ปรับปรุงฟังก์ชัน checkAndSetupFarmArea
       async function checkAndSetupFarmArea() {
         await waitForLongdoMap();
 
-        const storedFarmArea = localStorage.getItem("farmArea");
-        if (!storedFarmArea) {
-          try {
-            const farmArea = await createFarmAreaSelector();
-            if (farmArea) {
+        try {
+          // ตรวจสอบข้อมูลใน localStorage ก่อน
+          const storedFarmArea = localStorage.getItem("farmArea");
+          let farmArea;
+
+          if (!storedFarmArea) {
+            // ถ้าไม่มีข้อมูลใน localStorage ให้ดึงจาก Firebase
+            const snapshot = await database
+              .ref(`users/${state.userId}/farms`)
+              .once("value");
+            const firebaseFarmData = snapshot.val();
+
+            if (firebaseFarmData) {
+              // ถ้าพบข้อมูลใน Firebase ให้แปลงเป็นรูปแบบที่ต้องการและเก็บใน localStorage
+              farmArea = {
+                center: {
+                  lat: firebaseFarmData.centerLocation.latitude,
+                  lng: firebaseFarmData.centerLocation.longitude,
+                },
+                areaInSqm: firebaseFarmData.areaInSqm,
+                boundary: firebaseFarmData.boundary,
+              };
               localStorage.setItem("farmArea", JSON.stringify(farmArea));
-              await axios.post(`${API_BASE_URL}/farms`, {
-                userId: state.userId,
-                ...farmArea,
-              });
-              return farmArea;
+            } else {
+              // ถ้าไม่มีข้อมูลทั้งใน localStorage และ Firebase ให้สร้างใหม่
+              farmArea = await createFarmAreaSelector();
+              if (farmArea) {
+                localStorage.setItem("farmArea", JSON.stringify(farmArea));
+                await saveUserIdToFirebase(state.userId, farmArea);
+              } else {
+                throw new Error("Farm area selection cancelled");
+              }
             }
-            throw new Error("Farm area selection cancelled");
-          } catch (error) {
-            console.error("Error setting up farm area:", error);
-            throw error;
+          } else {
+            farmArea = JSON.parse(storedFarmArea);
           }
+
+          return farmArea;
+        } catch (error) {
+          console.error("Error in checkAndSetupFarmArea:", error);
+          throw error;
         }
-        return JSON.parse(storedFarmArea);
       }
 
       // Setup Functions
@@ -265,6 +277,7 @@
           "services/lineService.js",
           "services/farmService.js",
           "components/Weather.js",
+          "components/Alert.js",
           "components/PrivacyPolicy.js",
           "components/FarmAreaSelector.js",
           "components/Profile.js",
@@ -283,53 +296,50 @@
         }
       }
 
+      // ปรับปรุงฟังก์ชัน setupFarmAreaButton
       function setupFarmAreaButton() {
         const manageFarmAreaBtn = document.getElementById("manageFarmAreaBtn");
         manageFarmAreaBtn.onclick = async () => {
           try {
-            // แสดงสถานะกำลังโหลด
             manageFarmAreaBtn.disabled = true;
             manageFarmAreaBtn.innerHTML = `
-                <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                <span>กำลังโหลดแผนที่...</span>
-            `;
+        <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+        <span>กำลังโหลดแผนที่...</span>
+      `;
 
-            // รอ mock loading 1 วินาที
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
             const newFarmArea = await createFarmAreaSelector();
 
             if (newFarmArea) {
-              // แสดงสถานะกำลังบันทึก
               manageFarmAreaBtn.innerHTML = `
-                    <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                    <span>กำลังบันทึก...</span>
-                `;
+          <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+          <span>กำลังบันทึก...</span>
+        `;
 
-              // Mock การบันทึกข้อมูล
-              await new Promise((resolve) => setTimeout(resolve, 800));
-
-              // Mock การอัพเดทข้อมูลใน localStorage
+              // บันทึกข้อมูลทั้งใน Firebase และ localStorage
+              await saveUserIdToFirebase(state.userId, newFarmArea);
               localStorage.setItem("farmArea", JSON.stringify(newFarmArea));
 
-              // Show beautiful alert popup
               showReloadAlert();
 
-              // Mock แสดง toast สำเร็จ
-              showToast("บันทึกข้อมูลพื้นที่เรียบร้อย");
+              // อัพเดท state
+              state.farmArea = newFarmArea;
+
+              // อัพเดทการแสดงผล
+              updateFarmSummary(state.userId);
             }
           } catch (error) {
             console.error("Error managing farm area:", error);
             showToast("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง", "error");
           } finally {
-            // คืนค่าปุ่มกลับสู่สถานะปกติ
             manageFarmAreaBtn.disabled = false;
             manageFarmAreaBtn.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-                </svg>
-                <span>จัดการพื้นที่แปลงเกษตร</span>
-            `;
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+        </svg>
+        <span>จัดการพื้นที่แปลงเกษตร</span>
+      `;
           }
         };
       }
@@ -392,12 +402,14 @@
 
           // Initialize UI components
           fetchWeatherData();
-          updateFarmSummary({ ...farmData, farmArea });
+          fetchAlertData();
+          updateFarmSummary(userId);
           updateActivities(farmData.activities || []);
           updateFarmSensorData(farmSensorData);
 
           // Set up refresh intervals
           setInterval(fetchWeatherData, REFRESH_INTERVAL);
+          setInterval(fetchAlertData, REFRESH_INTERVAL);
           setInterval(async () => {
             try {
               const newSensorData = await loadFarmDataFromCSV();
@@ -419,30 +431,49 @@
           hideLoading();
         }
       }
-      // ฟังก์ชันสำหรับบันทึก userId ลง Firebase
-      async function saveUserIdToFirebase(userId) {
+
+      // ปรับปรุงฟังก์ชัน saveUserIdToFirebase
+      async function saveUserIdToFirebase(userId, farmArea = null) {
         try {
-          const database = firebase.database();
-          // เก็บข้อมูลพื้นฐานพร้อมเวลาที่เข้าใช้งานล่าสุด
-          await database.ref(`users/${userId}`).set(
-            {
-              userId: userId,
-              lastAccess: new Date().toISOString(),
+          const userRef = database.ref(`users/${userId}`);
+
+          // ดึงข้อมูลเดิมก่อน (ถ้ามี)
+          const snapshot = await userRef.once("value");
+          const existingData = snapshot.val() || {};
+
+          // สร้างข้อมูลที่จะบันทึก
+          const userData = {
+            userId: userId,
+            lastAccess: new Date().toISOString(),
+            createdAt: existingData.createdAt || new Date().toISOString(),
+          };
+
+          // ถ้ามีข้อมูล farmArea ให้เพิ่มเข้าไปด้วย
+          if (farmArea) {
+            userData.farms = {
+              centerLocation: {
+                latitude: farmArea.center.lat,
+                longitude: farmArea.center.lng,
+              },
+              areaInSqm: farmArea.areaInSqm,
+              sizeInRai: farmArea.areaInSqm / 1600, // แปลงตารางเมตรเป็นไร่
+              boundary: farmArea.boundary,
               createdAt: new Date().toISOString(),
-            },
-            (error) => {
-              if (error) {
-                console.error("Firebase save error:", error);
-                showToast("ไม่สามารถบันทึกข้อมูลได้", "error");
-              } else {
-                console.log("Data saved successfully");
-                showToast("บันทึกข้อมูลสำเร็จ", "success");
-              }
-            }
-          );
+            };
+          } else if (existingData.farms) {
+            // ถ้าไม่มี farmArea ใหม่แต่มีข้อมูลเดิม ให้คงข้อมูลเดิมไว้
+            userData.farms = existingData.farms;
+          }
+
+          // บันทึกข้อมูลลง Firebase
+          await userRef.update(userData);
+
+          // บันทึกลง localStorage ด้วย
+          localStorage.setItem(`user_${userId}_data`, JSON.stringify(userData));
+
+          console.log("Data saved successfully");
         } catch (error) {
           console.error("Firebase save error:", error);
-          showToast("ไม่สามารถบันทึกข้อมูลได้", "error");
         }
       }
 

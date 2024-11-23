@@ -1,71 +1,76 @@
 async function createFarmAreaSelector() {
   return new Promise((resolve, reject) => {
     try {
-      const modalContainer = document.createElement('div');
-      modalContainer.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex flex-col';
-      
-      const modalContent = document.createElement('div');
-      modalContent.className = 'bg-white flex flex-col h-full';
-      
+      const modalContainer = document.createElement("div");
+      modalContainer.className =
+        "fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex flex-col";
+
+      const modalContent = document.createElement("div");
+      modalContent.className = "bg-white flex flex-col h-full";
+
       // Header with instructions
-      const header = document.createElement('div');
-      header.className = 'p-4 bg-green-600 text-white text-center';
+      const header = document.createElement("div");
+      header.className = "p-4 bg-green-600 text-white text-center";
       header.innerHTML = `
         <h2 class="text-lg font-semibold mb-1">วาดพื้นที่แปลงเกษตร</h2>
         <p class="text-sm">แตะที่แผนที่เพื่อวาดจุดแปลง (อย่างน้อย 3 จุด)</p>
       `;
-      
+
       // Toolbar with controls
-      const toolbar = document.createElement('div');
-      toolbar.className = 'flex justify-between items-center p-2 bg-gray-100';
-      
-      const leftControls = document.createElement('div');
-      leftControls.className = 'space-x-2';
-      
-      const undoButton = document.createElement('button');
-      undoButton.innerHTML = '↩️ ย้อนกลับ';
-      undoButton.className = 'px-3 py-1 bg-white border rounded-full text-sm shadow-sm';
-      
-      const clearButton = document.createElement('button');
-      clearButton.innerHTML = '🗑️ เริ่มใหม่';
-      clearButton.className = 'px-3 py-1 bg-white border rounded-full text-sm shadow-sm';
-      
+      const toolbar = document.createElement("div");
+      toolbar.className = "flex justify-between items-center p-2 bg-gray-100";
+
+      const leftControls = document.createElement("div");
+      leftControls.className = "space-x-2";
+
+      const undoButton = document.createElement("button");
+      undoButton.innerHTML = "↩️ ย้อนกลับ";
+      undoButton.className =
+        "px-3 py-1 bg-white border rounded-full text-sm shadow-sm";
+
+      const clearButton = document.createElement("button");
+      clearButton.innerHTML = "🗑️ เริ่มใหม่";
+      clearButton.className =
+        "px-3 py-1 bg-white border rounded-full text-sm shadow-sm";
+
       leftControls.appendChild(undoButton);
       leftControls.appendChild(clearButton);
-      
-      const completeButton = document.createElement('button');
-      completeButton.innerHTML = '✅ ยืนยันพื้นที่';
-      completeButton.className = 'px-3 py-1 bg-green-600 text-white rounded-full text-sm shadow-sm disabled:opacity-50';
+
+      const completeButton = document.createElement("button");
+      completeButton.innerHTML = "✅ ยืนยันพื้นที่";
+      completeButton.className =
+        "px-3 py-1 bg-green-600 text-white rounded-full text-sm shadow-sm disabled:opacity-50";
       completeButton.disabled = true;
-      
+
       toolbar.appendChild(leftControls);
       toolbar.appendChild(completeButton);
-      
+
       // Map container
-      const mapContainer = document.createElement('div');
-      mapContainer.id = 'map';
-      mapContainer.className = 'flex-1';
-      
+      const mapContainer = document.createElement("div");
+      mapContainer.id = "map";
+      mapContainer.className = "flex-1";
+
       // Area info and inputs
-      const bottomPanel = document.createElement('div');
-      bottomPanel.className = 'p-4 bg-white border-t';
-      
-      const areaDisplay = document.createElement('div');
-      areaDisplay.className = 'text-center mb-3 text-sm font-semibold text-gray-700';
-      areaDisplay.textContent = 'เลือกจุดอย่างน้อย 3 จุดและกดยืนยันพื้นที่';
-      
-      const form = document.createElement('div');
-      form.className = 'space-y-3 safe-bottom';
+      const bottomPanel = document.createElement("div");
+      bottomPanel.className = "p-4 bg-white border-t";
+
+      const areaDisplay = document.createElement("div");
+      areaDisplay.className =
+        "text-center mb-3 text-sm font-semibold text-gray-700";
+      areaDisplay.textContent = "เลือกจุดอย่างน้อย 3 จุดและกดยืนยันพื้นที่";
+
+      const form = document.createElement("div");
+      form.className = "space-y-3 safe-bottom";
       form.innerHTML = `
         <div class="grid grid-cols-2 gap-2">
           <button class="p-3 bg-gray-200 rounded-lg text-gray-700">ยกเลิก</button>
           <button class="p-3 bg-gray-300 text-gray-500 rounded-lg" disabled>บันทึก</button>
         </div>
       `;
-      
+
       bottomPanel.appendChild(areaDisplay);
       bottomPanel.appendChild(form);
-      
+
       // Assemble modal
       modalContent.appendChild(header);
       modalContent.appendChild(toolbar);
@@ -73,21 +78,21 @@ async function createFarmAreaSelector() {
       modalContent.appendChild(bottomPanel);
       modalContainer.appendChild(modalContent);
       document.body.appendChild(modalContainer);
-      
+
       // Initialize map
       const map = new longdo.Map({
         placeholder: mapContainer,
-        language: 'th',
+        language: "th",
         location: { lon: 100.523186, lat: 13.736717 },
-        zoom: 15
+        zoom: 15,
       });
-      
+
       let points = [];
       let markers = [];
       let lines = [];
       let polygon = null;
       let isCompleted = false;
-      
+
       // คำนวณพื้นที่
       function calculateArea(coords) {
         if (coords.length < 3) return 0;
@@ -97,47 +102,51 @@ async function createFarmAreaSelector() {
           area += coords[i].lon * coords[j].lat;
           area -= coords[j].lon * coords[i].lat;
         }
-        area = Math.abs(area) * 111319.9 * 111319.9 / 2;
+        area = (Math.abs(area) * 111319.9 * 111319.9) / 2;
         return area;
       }
-      
+
       function updateAreaDisplay() {
         if (!isCompleted) {
-          areaDisplay.textContent = `เลือกไว้ ${points.length} จุด` + (points.length >= 3 ? ' - พร้อมยืนยันพื้นที่' : '');
+          areaDisplay.textContent =
+            `เลือกไว้ ${points.length} จุด` +
+            (points.length >= 3 ? " - พร้อมยืนยันพื้นที่" : "");
           return;
         }
         const area = calculateArea(points);
         const areaInRai = area / 1600;
-        areaDisplay.textContent = `พื้นที่: ${areaInRai.toFixed(2)} ไร่ (${area.toFixed(0)} ตร.ม.)`;
+        areaDisplay.textContent = `พื้นที่: ${areaInRai.toFixed(
+          2
+        )} ไร่ (${area.toFixed(0)} ตร.ม.)`;
       }
-      
+
       function drawPoint(location, index) {
         const marker = new longdo.Marker(location, {
           title: `จุดที่ ${index + 1}`,
           icon: {
-            url: 'https://map.longdo.com/mmmap/images/pin_mark.png',
-            offset: { x: 12, y: 45 }
+            url: "https://map.longdo.com/mmmap/images/pin_mark.png",
+            offset: { x: 12, y: 45 },
           },
-          detail: `จุดที่ ${index + 1}`
+          detail: `จุดที่ ${index + 1}`,
         });
         markers.push(marker);
         map.Overlays.add(marker);
       }
-      
+
       function drawLine(point1, point2) {
         const line = new longdo.Polyline([point1, point2], {
           lineWidth: 2,
-          lineColor: '#22c55e'
+          lineColor: "#22c55e",
         });
         lines.push(line);
         map.Overlays.add(line);
       }
-      
+
       function updateLines() {
         // Clear existing lines
-        lines.forEach(l => map.Overlays.remove(l));
+        lines.forEach((l) => map.Overlays.remove(l));
         lines = [];
-        
+
         // Draw new lines connecting points
         for (let i = 0; i < points.length; i++) {
           const nextIndex = (i + 1) % points.length;
@@ -145,34 +154,34 @@ async function createFarmAreaSelector() {
           drawLine(points[i], points[nextIndex]);
         }
       }
-      
+
       function createPolygon() {
         if (polygon) {
           map.Overlays.remove(polygon);
         }
         polygon = new longdo.Polygon(points, {
           lineWidth: 3,
-          lineColor: '#22c55e'
+          lineColor: "#22c55e",
         });
         map.Overlays.add(polygon);
       }
-      
+
       function clearAll() {
         points = [];
-        markers.forEach(m => map.Overlays.remove(m));
-        lines.forEach(l => map.Overlays.remove(l));
+        markers.forEach((m) => map.Overlays.remove(m));
+        lines.forEach((l) => map.Overlays.remove(l));
         if (polygon) map.Overlays.remove(polygon);
         markers = [];
         lines = [];
         polygon = null;
         isCompleted = false;
         completeButton.disabled = true;
-        const saveBtn = form.querySelectorAll('button')[1];
+        const saveBtn = form.querySelectorAll("button")[1];
         saveBtn.disabled = true;
-        saveBtn.className = 'p-3 bg-gray-300 text-gray-500 rounded-lg';
+        saveBtn.className = "p-3 bg-gray-300 text-gray-500 rounded-lg";
         updateAreaDisplay();
       }
-      
+
       function undoLastPoint() {
         if (points.length > 0) {
           points.pop();
@@ -186,91 +195,118 @@ async function createFarmAreaSelector() {
           updateAreaDisplay();
         }
       }
-      
+
       // Event handlers
-      map.Event.bind('click', function(mouse) {
+      map.Event.bind("click", function (mouse) {
         if (isCompleted) return;
-        
+
         const location = map.location(mouse);
         points.push(location);
-        
+
         // Draw new point
         drawPoint(location, points.length - 1);
-        
+
         // Update lines
         updateLines();
-        
+
         // Enable complete button if we have 3 or more points
         if (points.length >= 3) {
           completeButton.disabled = false;
         }
-        
+
         updateAreaDisplay();
       });
-      
+
       // Try to get user's location
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             map.location({
               lon: position.coords.longitude,
-              lat: position.coords.latitude
+              lat: position.coords.latitude,
             });
             map.zoom(17);
           },
           (error) => {
-            console.warn('Error getting location:', error);
+            console.warn("Error getting location:", error);
           }
         );
       }
-      
+
       undoButton.onclick = undoLastPoint;
       clearButton.onclick = clearAll;
-      
+
       completeButton.onclick = () => {
         if (points.length < 3) return;
-        
+
         isCompleted = true;
         createPolygon();
         updateLines();
         updateAreaDisplay();
-        
+
         // Enable save button
-        const saveBtn = form.querySelectorAll('button')[1];
+        const saveBtn = form.querySelectorAll("button")[1];
         saveBtn.disabled = false;
-        saveBtn.className = 'p-3 bg-green-600 text-white rounded-lg';
-        
+        saveBtn.className = "p-3 bg-green-600 text-white rounded-lg";
+
         // Disable map clicking
         completeButton.disabled = true;
       };
-      
-      const [cancelBtn, saveBtn] = form.querySelectorAll('button');
-      
+
+      const [cancelBtn, saveBtn] = form.querySelectorAll("button");
+
       cancelBtn.onclick = () => {
         document.body.removeChild(modalContainer);
         resolve(null);
       };
-      
-      saveBtn.onclick = () => {
+
+      saveBtn.onclick = async () => {
         if (!isCompleted) return;
-        
-        const area = calculateArea(points);
-        const farmArea = {
-          type: 'polygon',
-          size: area / 1600, // แปลงเป็นไร่
-          coordinates: points.map(point => ({
-            latitude: point.lat,
-            longitude: point.lon
-          })),
-          area: area
-        };
-        
-        document.body.removeChild(modalContainer);
-        resolve(farmArea);
+        console.log(userId);
+      
+        try {
+          const area = calculateArea(points);
+          
+          // คำนวณจุดกึ่งกลางของพื้นที่
+          const centerPoint = points.reduce((acc, point) => {
+            return {
+              lat: acc.lat + point.lat / points.length,
+              lon: acc.lon + point.lon / points.length
+            };
+          }, { lat: 0, lon: 0 });
+      
+          const farmArea = {
+            type: "polygon",
+            sizeInRai: area / 1600,
+            centerLocation: {
+              latitude: centerPoint.lat,
+              longitude: centerPoint.lon
+            },
+            areaInSqm: area,
+            createdAt: new Date().toISOString()
+          };
+      
+          if (!userId) {
+            throw new Error("ไม่พบ User ID");
+          }
+      
+          // แทนที่ข้อมูลเดิมแทนการ push
+          const farmRef = database.ref(`users/${userId}/farms`);
+          await farmRef.set(farmArea); // ใช้ set แทน push เพื่อแทนที่ข้อมูลเดิม
+      
+          showToast("บันทึกข้อมูลแปลงเกษตรสำเร็จ", "success");
+      
+          document.body.removeChild(modalContainer);
+          resolve(farmArea);
+          fetchWeatherData();
+        } catch (error) {
+          console.error("Error saving farm area:", error);
+          showToast("ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่", "error");
+        }
       };
       
     } catch (error) {
-      console.error('Error in createFarmAreaSelector:', error);
+      console.error("Error in createFarmAreaSelector:", error);
       reject(error);
     }
   });
