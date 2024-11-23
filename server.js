@@ -26,7 +26,8 @@ const headers = {
 const conversations = {}
 
 const sendMessage = async (userId, message) => {
-  const body = {
+  try {
+    const body = {
     to: userId,
     messages: [
       {
@@ -37,6 +38,11 @@ const sendMessage = async (userId, message) => {
   };
   const response = await axios.post(LINE_API_URL, body, { headers });
   return response;
+  } catch (error) {
+    console.log("error: ", error.message)
+    throw new Error(error)
+  }
+  
 };
 
 const sendAudio = async (userId, audioUrl, duration) => {
