@@ -110,10 +110,27 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
     <script src="./utils/constants.js"></script>
-    <script src="./services/userService.js"></script>
-    <script src="./firebase-config.js"></script>
+    <!-- Import Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
     <script>
-      import { saveUserProfile } from './services/user-service.js';
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyCYWx9i06SUNJubzqRmMz0a4eDGxIDHjuY",
+        authDomain: "greensense-7b257.firebaseapp.com",
+        databaseURL: "https://greensense-7b257-default-rtdb.asia-southeast1.firebasedatabase.app", // ต้องมีบรรทัดนี้
+        projectId: "greensense-7b257",
+        storageBucket: "greensense-7b257.firebasestorage.app",
+        messagingSenderId: "466569052274",
+        appId: "1:466569052274:web:77f6c889e784d6cc1402eb",
+        measurementId: "G-RJDZ5D1Y01",
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+
       // Global state
       const state = {
         userId: null,
@@ -402,7 +419,34 @@
           hideLoading();
         }
       }
+      // ฟังก์ชันสำหรับบันทึก userId ลง Firebase
+      async function saveUserIdToFirebase(userId) {
+        try {
+          const database = firebase.database();
+          // เก็บข้อมูลพื้นฐานพร้อมเวลาที่เข้าใช้งานล่าสุด
+          await database.ref(`users/${userId}`).set(
+            {
+              userId: userId,
+              lastAccess: new Date().toISOString(),
+              createdAt: new Date().toISOString(),
+            },
+            (error) => {
+              if (error) {
+                console.error("Firebase save error:", error);
+                showToast("ไม่สามารถบันทึกข้อมูลได้", "error");
+              } else {
+                console.log("Data saved successfully");
+                showToast("บันทึกข้อมูลสำเร็จ", "success");
+              }
+            }
+          );
+        } catch (error) {
+          console.error("Firebase save error:", error);
+          showToast("ไม่สามารถบันทึกข้อมูลได้", "error");
+        }
+      }
 
+      // Main Application Flow
       async function main() {
         try {
           showLoading("กำลังเริ่มต้นระบบ...");
@@ -419,49 +463,18 @@
           // Load required scripts
           await loadAllScripts();
 
-          // Get user profile
+          // Get user profile and initialize
           const profile = await withTimeout(
             liff.getProfile(),
             TIMEOUT_DURATION
           );
 
-          // เพิ่มข้อมูล Line เพิ่มเติม
-          const extendedProfile = {
-            ...profile,
-            accessToken: liff.getAccessToken(),
-            // เพิ่มข้อมูลอื่นๆ ที่ต้องการ
-          };
-
-          // บันทึกข้อมูลลง State
+          // เก็บ userId
           state.userId = profile.userId;
           userId = profile.userId;
 
-          try {
-            // บันทึกข้อมูลลง Firebase
-            const userData = await saveUserProfile(extendedProfile);
-            console.log("บันทึกข้อมูล Profile สำเร็จ:", userData);
-
-            // เก็บข้อมูลไว้ใช้ในแอพ
-            state.userData = userData;
-
-            // ตั้งค่าต่างๆ ตามข้อมูล user
-            if (userData.settings) {
-              applyUserSettings(userData.settings);
-            }
-
-            // ส่ง Analytics
-            logUserActivity("login_success", {
-              userId: profile.userId,
-              platform: "line",
-              deviceType: userData.deviceInfo.platform,
-            });
-          } catch (error) {
-            console.error("ไม่สามารถบันทึกข้อมูล Profile:", error);
-            showToast(
-              "พบปัญหาในการบันทึกข้อมูล แต่สามารถใช้งานต่อได้",
-              "warning"
-            );
-          }
+          // บันทึก userId ลง Firebase
+          await saveUserIdToFirebase(profile.userId);
 
           await initializeComponents(profile);
         } catch (error) {
@@ -472,19 +485,6 @@
           );
         } finally {
           hideLoading();
-        }
-      }
-
-      // ฟังก์ชันสำหรับตั้งค่าต่างๆ ตามข้อมูล user
-      function applyUserSettings(settings) {
-        // ตั้งค่าธีม
-        if (settings.theme) {
-          document.documentElement.setAttribute("data-theme", settings.theme);
-        }
-
-        // ตั้งค่าภาษา
-        if (settings.language) {
-          document.documentElement.setAttribute("lang", settings.language);
         }
       }
 
