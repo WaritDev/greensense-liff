@@ -402,14 +402,13 @@
 
           // Initialize UI components
           fetchWeatherData();
-          fetchAlertData();
+          window.weatherApp.fetchAlertData();
           updateFarmSummary(userId);
           updateActivities(farmData.activities || []);
           updateFarmSensorData(farmSensorData);
 
           // Set up refresh intervals
           setInterval(fetchWeatherData, REFRESH_INTERVAL);
-          setInterval(fetchAlertData, REFRESH_INTERVAL);
           setInterval(async () => {
             try {
               const newSensorData = await loadFarmDataFromCSV();
@@ -422,10 +421,6 @@
           setupFarmAreaButton();
         } catch (error) {
           console.error("Error initializing components:", error);
-          showToast(
-            "เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง",
-            "error"
-          );
           throw error;
         } finally {
           hideLoading();
@@ -510,10 +505,6 @@
           await initializeComponents(profile);
         } catch (error) {
           console.error("Error in main:", error);
-          showToast(
-            "เกิดข้อผิดพลาดในการเริ่มต้นระบบ กรุณาลองใหม่อีกครั้ง",
-            "error"
-          );
         } finally {
           hideLoading();
         }
