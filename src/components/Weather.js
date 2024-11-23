@@ -153,6 +153,8 @@ const updateWeatherCard = (weatherData) => {
   `;
 
   document.getElementById('weatherCardComponent').innerHTML = template;
+
+  
 };
 
 // ปรับปรุงการเรียกใช้งานฟังก์ชัน
