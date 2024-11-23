@@ -203,12 +203,23 @@ const callTyphoon = async (userId, userMessage) => {
 
     // Push the system instruction only once at the beginning
     if (userConversation.length === 0) {
+      // Fetch user profile and farm info
+      const userProfile = await getUserProfile(userId);
+      const farmInformation = await getFarmInformation(userId);
+
+      // Build an initial instruction to include context
+      const initialInstruction = `
+        You are น้องกรีน, a helpful female farmer assistant. Answer only in Thai.
+        Be concise and polite.
+        User profile: ${userProfile ? JSON.stringify(userProfile) : "N/A"}.
+        Farm Information: ${farmInformation ? JSON.stringify(farmInformation) : "N/A"}.
+      `;
+
       userConversation.push({
         role: "system",
-        content: "You are a helpful female farmer assistant. Answer only in Thai. Your replies should be concise and polite. Your name are น้องกรีน",
+        content: initialInstruction,
       });
     }
-
 
     // Add the user's message to the conversation history
     userConversation.push({ role: "user", content: userMessage });
@@ -260,6 +271,22 @@ const getUserProfile = async (userId) => {
   }
 };
 
+const getFarmInformation = async (userId) => {
+  // Extract farm information from user messages or prompts
+  const farmInformation = {
+    "areaInSqm": 300.8537140709604,
+    "centerLocation": {
+      "latitude": 13.75427195415062,
+      "longitude": 100.51004076004028
+    },
+    "createdAt": "2024-11-23T14:44:52.019Z",
+    "sizeInRai": 0.18803357129435025,
+    "type": "polygon"
+  }
+
+  return farmInformation;
+};
+
 app.post("/send-message", async (req, res) => {
   const { userId, message } = req.body;
 
@@ -288,50 +315,41 @@ app.post('/webhook', async (req, res) => {
   }
 
   try {
-    const lineEvent = events[0]
-    const userId = lineEvent.source.userId
-    let response;
+    const lineEvent = events[0];
+    const userId = lineEvent.source.userId;
+    const userMessage = lineEvent.message.text || ''; // Handle text input
+    const userState = conversations[userId]?.state || "idle";
 
-
-    // Initialize the conversation context if it doesn't exist
+    // Initialize conversation context
     if (!conversations[userId]) {
-      conversations[userId] = {
-        history: [],
-        state: "idle",
-      };
+      conversations[userId] = { history: [], state: "idle" };
+    }
 
-      // ดึงข้อมูลโปรไฟล์ผู้ใช้
+    if (userMessage === "start-chat") {
       const userProfile = await getUserProfile(userId);
       const userName = userProfile ? userProfile.displayName : "คุณ"; // ใช้ชื่อจากโปรไฟล์หรือค่าเริ่มต้น
 
-      // ประโยคแนะนำตัว
       const welcomeMessage = `สวัสดีค่ะ ${userName}! ฉันคือน้องเขียว ผู้ช่วยเกษตรกรของคุณค่ะ 😊\n` +
         `พิมพ์ "start-text" เพื่อเริ่มโหมดข้อความ หรือ "start-speech" เพื่อเริ่มโหมดเสียงได้เลยค่ะ!\n` +
-        `หากต้องการเริ่มใหม่สามารถพิมพ์ "reset" ได้ตลอดเวลาค่ะ`;
+        `หากต้องการเริ่มใหม่สามารถพิมพ์ "reset" ได้ตลอดเวลาค่ะ`
 
-      // await sendMessage(userId, welcomeMessage);
-      console.log(lineEvent)
-    }
-    console.log(events)
-    const userMessage = lineEvent.message.text || ''; // Handle text input
-    const userState = conversations[userId].state;
-
-    if (userMessage === "start-text") {
-      response = await sendMessage(userId, "เริ่มต้นโหมดข้อความ มีอะไรให้ช่วยไหมคะ?");
-      conversations[userId] = { history: [], state: "text-mode" }; // Reset conversation
+      await sendMessage(userId, welcomeMessage)
+    } else if (userMessage === "start-text") {
+      await sendMessage(userId, "เริ่มต้นโหมดข้อความ มีอะไรให้ช่วยไหมคะ?");
+      conversations[userId].state = "text-mode"; // Reset conversation
     } else if (userMessage === "start-speech") {
-      response = await sendMessage(userId, "เริ่มต้นโหมดเสียง กรุณาพูดหรือพิมพ์คำถามของคุณค่ะ");
-      conversations[userId] = { history: [], state: "speech-mode" }; // Reset conversation
+      await sendMessage(userId, "เริ่มต้นโหมดเสียง กรุณาพูดหรือพิมพ์คำถามของคุณค่ะ");
+      conversations[userId].state = "speech-mode"; // Reset conversation
     } else if (userMessage === "reset") {
       conversations[userId] = {
         history: [],
         state: "idle",
       };
-      response = await sendMessage(userId, "รีเซ็ตเรียบร้อยค่ะ")
+      await sendMessage(userId, "รีเซ็ตเรียบร้อยค่ะ")
     } else if (userState === "text-mode") {
       // Handle multi-turn text conversation
       const typhoonReply = await callTyphoon(userId, userMessage);
-      response = await sendMessage(userId, typhoonReply);
+      await sendMessage(userId, typhoonReply);
 
       // Save the message and reply to conversation history
       conversations[userId].history.push({ role: "user", content: userMessage });
@@ -382,12 +400,10 @@ app.post('/api/save-user-log', (req, res) => {
     const { data } = req.body;
     const filePath = path.join(__dirname, 'user_logs.csv');
 
-    // ถ้าไฟล์ยังไม่มี ให้สร้าง header
     if (!fs.existsSync(filePath)) {
       fs.writeFileSync(filePath, 'userId,timestamp\n');
     }
 
-    // เขียนข้อมูลต่อท้ายไฟล์
     fs.appendFileSync(filePath, data);
 
     res.status(200).json({ message: 'บันทึกข้อมูลสำเร็จ' });
