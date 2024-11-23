@@ -432,7 +432,7 @@
           // บันทึกข้อมูลผู้ใช้
           try {
             // เตรียมข้อมูลสำหรับส่งไป API
-            const response = await fetch(`${API_BASE_URL}api/save-user-log`, {
+            const response = await fetch(`${API_BASE_URL}`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
