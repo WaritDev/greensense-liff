@@ -83,21 +83,21 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## 👥 Team
 
-- Project Manager / System Analyst : [Anusit Srikirin] @anusit47
-- Fullstack-developer : [Warit Lekmuenwai] @WaritDev
-- AI/Backend-developer : [Pachara Prompang] @plenglnw1
-- Business Intelligence / Business Analyst : [Pipatpol Wijitchayanon] @higanbana-chan
+- Project Manager / System Analyst : [Anusit Srikirin] @anusit47 
+- Fullstack-developer : [Warit Lekmuenwai] @WaritDev 
+- AI/Backend-developer : [Pachara Prompang] @plenglnw1 
+- Business Intelligence / Business Analyst : [Pipatpol Wijitchayanon] @higanbana-chan 
 
 ## 📞 Contact
 
-- LINE Official Account: @203lbcac
-- Email: threeninja.work@gmail.com
+- LINE Official Account: @203lbcac 
+- Email: threeninja.work@gmail.com 
 
 ## 🙏 Acknowledgments
 
-- Thanks to our partner farmers for valuable feedback
-- Agricultural research institutions for collaboration
-- Environmental conservation organizations for guidance
+- Thanks to our partner farmers for valuable feedback 
+- Agricultural research institutions for collaboration 
+- Environmental conservation organizations for guidance 
 
 ---
 Made with ❤️ for Thai Farmers | © 2024 GreenSense
